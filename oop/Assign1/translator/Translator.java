@@ -99,12 +99,26 @@ public class Translator extends Tool {
 
       }.dispatch(node);
       
+      //curerntly just a blank space and a debug print line for each stage of the translation.
       if (runtime.test("translate")){
-          //translation code
+          runtime.console.pln("Begin translation...\n").flush();
+          
+          runtime.console.pln("Begin depency finding and resolving.\n").flush();
+          
+          runtime.console.pln("Begin scoping/symbol table stuff.\n").flush();
+          
+          runtime.console.pln("Begin inheritance and data layout handling.\n").flush();
+          
+          runtime.console.pln("Begin creating a C++ AST for each Java AST.\n").flush();
+          
+          runtime.console.pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
+          
+          runtime.console.pln("... translation is now finished.\n").flush();
       }
       
       if (runtime.test("findDependencies")){
-          //dependency finding goes here
+          runtime.console.pln("Finding dependencies...\n").flush();
+          //find and resolve all dependencies
       }
     }
   }
