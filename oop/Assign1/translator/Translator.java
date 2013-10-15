@@ -42,6 +42,8 @@ public class Translator extends Tool {
       bool("printJavaAST", "printJavaAST", false, "Print Java AST.").
       bool("printJavaCode", "printJavaCode", false, "Print Java code.").
       bool("countMethods", "countMethods", false, "Count all Java methods.");
+      bool("translate", "translate", false, "Translate from Java to C++.");
+      bool("findDependencies", "findDependencies", false, "Find all Dependencies of given Java file.");
   }
 
   public void prepare() {
@@ -96,6 +98,14 @@ public class Translator extends Tool {
         }
 
       }.dispatch(node);
+      
+      if (runtime.test("translate")){
+          //translation code
+      }
+      
+      if (runtime.test("findDependencies")){
+          //dependency finding goes here
+      }
     }
   }
 
