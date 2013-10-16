@@ -1,4 +1,3 @@
-
 package xtc.oop;
 
 import xtc.tree.GNode;
@@ -67,15 +66,14 @@ public class InheritanceHandler extends Visitor {
 	
 	
     public void visitClassDeclaration(GNode n) {
-    	//techincally creating a childNode of whatever class this extends
-		className = n.get(1).toString();
+		className = n.get(1).toString();  //for the record, get(#) goes down the tree according to the # index and then returns that node
+                                          //in this case if we go down 1 from the class declaration, we get the class name
 		GNode newChildNode = GNode.create("Class");
 		newChildNode.setProperty("name", className);
-		
+        GNode parent = null; 
 		thisClassStaticVars = GNode.create("StaticVarsList"); //for use way later, remains blank atm
 		
 		//Now we need a super class that's either Object or something explicit
-		GNode parent = null; 
 		if(n.get(3) != null) { // if it extends something
 			String extendedClass = (String)(n.getNode(3).getNode(0).getNode(0).get(0)); // String name of Parent Class
 			parent = getClass(extendedClass); // Append new class as child of the Parent class, otherwise it gets Object as parent
@@ -84,14 +82,14 @@ public class InheritanceHandler extends Visitor {
 			parent = getClass("Object"); // Doesn't extend, add to root (Object)
 		}
 		
-		if(DEBUG) System.out.println( "Visiting new class: " + className + " extends " + parent.getProperty("name") );
+		//if(DEBUG) System.out.println( "Visiting new class: " + className + " extends " + parent.getProperty("name") );
 		
 		//Building the vtables and data layout via Parent
-		currentHeaderNode = inheritHeader( (GNode)parent.getNode(0) ); //inherit parent header
-		visit(n); // <-- VISITING ALL CHILDREN OF THIS CLASS (DATA FIELDS, METHODS, CONSTRUCTORS, ...)
-		newChildNode.add(currentHeaderNode);
-		newChildNode.setProperty( "parentClassNode", parent);
-		parent.addNode(newChildNode);
+		currentHeaderNode = inheritHeader((GNode)parent.getNode(0)); //inherit parent header
+		visit(n); //visit every child of this class (data fields, all methods, constructors etc...)
+		newChildNode.add(currentHeaderNode); //now that we're done visitng, currentHeaderNode is finished being edited
+		newChildNode.setProperty( "parentClassNode", parent); //set property 'parentClassNode' to the parent GNode from before, can get list of each nodes properties at any time, it's in the Node class's methods
+		parent.addNode(newChildNode); //add child as child of parent node in the actual tree (not just in terms of data/properties)
     }
 	
     
@@ -102,7 +100,7 @@ public class InheritanceHandler extends Visitor {
     
 	//hardcodes the given base classes
 	//Object, Class, String, and Array
-    //need to provide the data layout for Object
+    //need to provide the data layout for Object, and need to finish Templates for ARRAY
 	public void initializeGivenClasses(){
 		GNode object = GNode.create("Class");
 		object.setProperty("name", "Object");
@@ -133,7 +131,7 @@ public class InheritanceHandler extends Visitor {
 		//has been filled in correctly
 		classTree = object;
 		classTree.add(string);
-		classTree.add(classNode);
+		classTree.add(classNode); //the name "class" was giving me trouble
 		classTree.add(array);
 	}
 	
@@ -145,26 +143,25 @@ public class InheritanceHandler extends Visitor {
 		//adds virtual methods to vtable
 	}
 	
-	
+	//given the subclass as a string, give me the super class's GNode
 	public GNode getSuperclass(String sc) 
 	{
 		GNode child = getClass(sc);
 		
-		if(DEBUG) System.out.println("got class node for " + sc);
-		// can't be passed primitive types
-
+		//if(DEBUG) System.out.println("got class node for " + sc);
+		// can't be passed primitive type
 		if (child.getProperty("name").equals("Object")) return null;
 			
 		return (GNode)child.getProperty("parentClassNode");
 	}
 	
-	
+	//given the subclasses node, get it's name, and then make call to other getSuperclass method, return the Superclass's GNode
 	public GNode getSuperclass(GNode n) 
 	{
 		return getSuperclass( n.getStringProperty("name") );
 	}
 
-	
+	//given the subclass as a string, return if it has a superclass
 	public boolean hasSuperclass(String sc) 
 	{
 		if (getSuperclass(sc) != null) 
@@ -175,14 +172,14 @@ public class InheritanceHandler extends Visitor {
 			return false;
 	}
 	
-	
+	//given a node give me the class name
 	public String getClassName(GNode n) 
 	{
 		return n.getStringProperty("name");
     }
 	
 	
-	//print classes using class tree to make sure shits working
+	//print classes for debugging purposes/prove our midterm stuff works
 	public void printClassTree() 
 	{
 
