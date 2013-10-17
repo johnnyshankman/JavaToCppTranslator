@@ -118,7 +118,7 @@ public class GetDependencies extends Tool {
 		
 				        
 		System.out.println("Dependency file: " + ((String)System.getProperty("user.dir")) + "/src" + files[i]);
-		File file = locate( "~/Desktop/OOP/xtc/src" + files[i]);
+		File file = locate(((String)System.getProperty("user.dir")) + "~/Desktop/OOP//src" + files[i]);
 						Reader in = runtime.getReader(file);
 						tree[i] = parse(in, file);
 
