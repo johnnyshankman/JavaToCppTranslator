@@ -1,5 +1,4 @@
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -88,7 +87,7 @@ public class GetDependencies extends Tool {
 					runtime.console().p(files[startfiles]).pln().flush();
 					startfiles++;
                     visit(n);
-					// getFile();
+					getFile();
 					
                 }
 
@@ -115,13 +114,14 @@ public class GetDependencies extends Tool {
 			GNode tree[] = new GNode[500];
 
 			for(int i = 1; i < startfiles; i++) {
-				if(files[i] != null) {
+		        {
 					
-						//Locate and open the file
-					    System.out.print("Adding dependency node: " + ((String)System.getProperty("user.dir")) + "/src/xtc/oop" + files[i]);
-						File file = locate(((String)System.getProperty("user.dir")) + "/src/xtc" + files[i]);
+				        
+	       System.out.println("Dependency file: " + ((String)System.getProperty("user.dir")) + "/src" + files[i]);
+			  	File file = locate(((String)System.getProperty("user.dir")) + "/src" + files[i]);
 						Reader in = runtime.getReader(file);
 						tree[i] = parse(in, file);
+
 					
 				
 				}
