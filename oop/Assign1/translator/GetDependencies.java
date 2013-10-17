@@ -31,7 +31,7 @@ public class GetDependencies extends Tool {
     }
     
     public String getCopy() {
-        return "";
+        return "Team";
     }
     
     public void init() {
@@ -79,6 +79,7 @@ public class GetDependencies extends Tool {
 		String fileToImport = "";
 		for (int i = 0; i < 3; i++){
 		    fileToImport += "/" + ((String)(n.getNode(1).get(i)));
+		    System.out.println(n.getNode(1).get(i)); 
 		    
 		}
 		fileToImport += ".java";
@@ -115,13 +116,13 @@ public class GetDependencies extends Tool {
 	
 	for(int i = 1; i < startfiles; i++) {
 	    {
+		
 				        
 		System.out.println("Dependency file: " + ((String)System.getProperty("user.dir")) + "/src" + files[i]);
-		File file = locate(((String)System.getProperty("user.dir")) + "/src" + files[i]);
-		Reader in = runtime.getReader(file);
-		tree[i] = parse(in, file);
-			System.out.println(tree[i]);
-					
+	        	File file = locate(((String)System.getProperty("user.dir")) + "/src" + files[i]);
+						Reader in = runtime.getReader(file);
+						tree[i] = parse(in, file);
+						System.out.println(tree[i]);					
 				
 				}
 			}
