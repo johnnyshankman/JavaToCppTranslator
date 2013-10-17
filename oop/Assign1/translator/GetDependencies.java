@@ -115,13 +115,12 @@ public class GetDependencies extends Tool {
 	
 	for(int i = 1; i < startfiles; i++) {
 	    {
-		
 				        
 		System.out.println("Dependency file: " + ((String)System.getProperty("user.dir")) + "/src" + files[i]);
-	        	File file = locate(((String)System.getProperty("user.dir")) + "/src" + files[i]);
-						Reader in = runtime.getReader(file);
-						tree[i] = parse(in, file);
-
+		File file = locate(((String)System.getProperty("user.dir")) + "/src" + files[i]);
+		Reader in = runtime.getReader(file);
+		tree[i] = parse(in, file);
+			System.out.println(tree[i]);
 					
 				
 				}
