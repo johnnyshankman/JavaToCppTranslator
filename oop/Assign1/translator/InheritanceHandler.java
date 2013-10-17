@@ -21,9 +21,10 @@ import java.util.Iterator;
 //virtual method processing
 //data layout processing
 //constructor processing
-//"internal" method processing
-//overloading handling
-//and we'll want to include getter methods
+//getter methods
+//???"internal" method processing???
+//XXXXXX overloading handling  XXXXXXX
+
 
 public class InheritanceHandler extends Visitor {
 		
