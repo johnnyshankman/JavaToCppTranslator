@@ -140,24 +140,27 @@ public class InheritanceHandler extends Visitor {
 		//do i need to do integer?
 	}
 	
-	///////////************** DATA LAYOUTS
+	///////////************** FIELD HANDLING
 	
 	public void visitFieldDeclaration(GNode n){
 		//create data layout
-		//adds fields
+		//adds fields to it
 	}
 	
 	
 	
-	///////////************** VIRTUAL METHODS
+	///////////************** (VIRTUAL) METHOD HANDLING
 	
 	public void visitMethodDeclaration(GNode n){
-		//adds virtual methods to vtable
+		//everytime we visit a declaration either:
+        //(case of overriding)overwrite the methods virtualMethodPointer to the new one it should now point to
+        //(all other times) creat the virtualMethodPointer and append it to the VirtualTable
+        //make sure to thoroughly create the methods signature
 	}
 	
 	
 	
-	///////////************** CONSTRUCTOR PROCESSING
+	///////////************** CONSTRUCTOR HANDLING
 	
 	public void visitConstructorDeclaration(GNode n){
 		//literally no idea what this needs to do
@@ -220,6 +223,7 @@ public class InheritanceHandler extends Visitor {
         //we add the string on to the typeSpecifier
         //then the typeSpecifier on to the Type node
         //then return the Type node
+        //just saves a dickload of code cause we do this a fewtimes
     }
 	
 	
@@ -227,7 +231,7 @@ public class InheritanceHandler extends Visitor {
 	
 	///////////************** DEBUG
 	
-	//print classes for debugging purposes/prove our midterm stuff works
+	
 	public void printClassTree() 
 	{
 
