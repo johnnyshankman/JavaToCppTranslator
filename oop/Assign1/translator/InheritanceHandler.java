@@ -207,8 +207,20 @@ public class InheritanceHandler extends Visitor {
     }
 	
 	
+	///////////************** HELPER METHODS
+    
+    GNode inheritParentsHeader(GNode parentHeader){
+        //writes className's data layout as a copy of parentHeader's header
+    }
 	
-	
+    GNode createTypeNode(String type){
+        //creates/returns a "Type" node, followed by null node, followed by either "QualifiedIdentifier" or "PrimitiveType" node, followed by the string (not a node)
+        //remember that we always make ASTs like this backwards
+        //
+        //we add the string on to the typeSpecifier
+        //then the typeSpecifier on to the Type node
+        //then return the Type node
+    }
 	
 	
 	
