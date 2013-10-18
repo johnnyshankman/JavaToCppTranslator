@@ -26,10 +26,11 @@ import java.util.Iterator;
 
 public class InheritanceHandler extends Visitor {
 		
-	GNode[] inheritanceTree; //will hold the whole thang
+	GNode inheritanceTree; //will hold the whole thang
 	GNode currentHeaderNode; //global, points to the current working header node (vtable and data layout)
+    GNode classStaticVars; //this class's static variables
     String className; //global current class name
-	GNode classStaticVars; //this class's static variables
+	
 	
 	
 	
@@ -37,7 +38,6 @@ public class InheritanceHandler extends Visitor {
 	
 	public InheritanceHandler(Node[] astArray)
 	{
-		inheritanceTree = astArray;
 		initializeGivenClasses(); //this will hardcode the Object, Class, String, and Array classes to be beginning of the tree (correctly)
 									// every other class will have to extend one of these data layouts/classes (meaning they just inherit and add on to the existing data layout)
 		
