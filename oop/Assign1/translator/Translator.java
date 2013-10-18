@@ -31,7 +31,7 @@ public class Translator extends Tool {
   }
 
   public String getCopy() {
-    return "(C) 2013 <Group Name>";
+    return "(C) 2013 Group Group";
   }
 
   public void init() {
@@ -99,19 +99,28 @@ public class Translator extends Tool {
 
       }.dispatch(node);
       
-      //curerntly just a blank space and a debug print line for each stage of the translation.
+ 
     if (runtime.test("translate")){
+        
         runtime.console.pln("Begin translation...\n").flush();
-          
         runtime.console.pln("Begin depedency finding and resolving.\n").flush();
-          //will use an array of ASTs implementation to store dependencies (/classes too?)
-          //so something like GNode dependencies[] = new GNode[x]
-          //dependcies[0] = (GNode)node  <---- i think 'node' in process(Node node) is the compilation unit aka root node
+        
+        GNode[] astArray = new GNode[50]; //arbitrary size
+        astArray[0] = (GNode) node; //0th spot is the original java file's AST
+        GetDependencies dependencyHandler = new GetDependencies();
+		astArray = dependencyHandler.????(astArray); //we need a method that takes the astArray as a paramater and returns an array populated with the asts of all dependencies
+		//asttArray[0] = (GNode)node; this shouldn't be necessary if GetDependencies returns correctly
           
-        runtime.console.pln("Begin scoping/symbol table stuff.\n").flush();
+         
           
         runtime.console.pln("Begin inheritance and data layout handling.\n").flush();
-          //final InheritanceHandler dataLayout = new InheritanceHandler(dependenciesArray)
+        
+        InheritanceHandler dataLayout = new InheritanceHandler(astArray);
+        //done
+        
+        
+        
+        runtime.console.pln("Begin scoping/symbol table stuff.\n").flush();
           
         runtime.console.pln("Begin creating a C++ AST for each Java AST.\n").flush();
           
@@ -119,14 +128,6 @@ public class Translator extends Tool {
           
         runtime.console.pln("... translation is now finished.\n").flush();
       }
-      
-    if (runtime.test("findDependencies")){
-        runtime.console.pln("Finding dependencies...\n").flush();
-          //find and resolve all dependencies
-          //this may be unnecessary depending on implementation
-          //if you go with AST implementation this can be super unneccessary and handled by another class.
-      }
-    }
   }
 
   /**
