@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Iterator;
 
-//needs to be compartamentalized into
 //initialization
 //tree processing
 //virtual method processing
@@ -23,7 +22,6 @@ import java.util.Iterator;
 //constructor processing
 //getter methods
 //???"internal" method processing???
-//XXXXXX overloading handling  XXXXXXX
 
 
 public class InheritanceHandler extends Visitor {
@@ -32,6 +30,10 @@ public class InheritanceHandler extends Visitor {
 	GNode currentHeaderNode; //global, points to the current working header node (vtable and data layout)
     String className; //global current class name
 	GNode classStaticVars; //this class's static variables
+	
+	
+	
+	///////////************** CONSTRUCTOR
 	
 	public InheritanceHandler(Node[] astArray)
 	{
@@ -47,14 +49,13 @@ public class InheritanceHandler extends Visitor {
 			}
 		}
 		
-		//dispatchCallExpressionVisitor(astArray); //really have no idea what this does and why it's after everything else
-		//ill have to analyze the reference code to understand why they needed this seemingly bizarre step
+		//dispatchCallExpressionVisitor(astArray); //in the other code this is where they handled how we do method calls, like which one gets called when we dispatch etc
 
 	}
 	
 	
 	
-	
+	///////////************** TREE/CLASS PROCESSING
 	
 	public void visit(Node n) 
 	{
@@ -98,7 +99,9 @@ public class InheritanceHandler extends Visitor {
     
     
     
+	///////////************** INITIALIZERS
     
+  
 	//hardcodes the given base classes
 	//Object, Class, String, and Array
     //need to provide the data layout for Object, and need to finish Templates for ARRAY
@@ -106,15 +109,15 @@ public class InheritanceHandler extends Visitor {
 		GNode object = GNode.create("Class");
 		object.setProperty("name", "Object");
 		GNode classHeaderDeclaration = GNode.create("ClassHeaderDeclaration");
-		classHeaderDeclaration.add( objectClassVirtualTable() );
-		classHeaderDeclaration.add( objectClassDataLayout() );
+		classHeaderDeclaration.add( objectClassVirtualTable() ); //need to write these methods
+		classHeaderDeclaration.add( objectClassDataLayout() ); //need to write these methods
 		object.add(classHeaderDeclaration);
 
 		GNode string = GNode.create("Class");
 		string.setProperty("name", "String");
 		string.setProperty("parentClassNode", objectNode);
 		className = "String";
-		string.add( inheritHeader( classHeaderDeclaration ) );
+		string.add( inheritHeader( classHeaderDeclaration ) ); //need to write this method as well
 
 		GNode classNode = GNode.create("Class");
 		class.setProperty("name", "Class");
@@ -132,17 +135,41 @@ public class InheritanceHandler extends Visitor {
 		//has been filled in correctly
 		classTree = object;
 		classTree.add(string);
-		classTree.add(classNode); //the name "class" was giving me trouble
+		classTree.add(class); 
 		classTree.add(array);
+		//do i need to do integer?
+	}
+	
+	///////////************** DATA LAYOUTS
+	
+	public void visitFieldDeclaration(GNode n){
+		//create data layout
+		//adds fields
 	}
 	
 	
 	
-	
+	///////////************** VIRTUAL METHODS
 	
 	public void visitMethodDeclaration(GNode n){
 		//adds virtual methods to vtable
 	}
+	
+	
+	
+	///////////************** CONSTRUCTOR PROCESSING
+	
+	public void visitConstructorDeclaration(GNode n){
+		//literally no idea what this needs to do
+	}
+	
+	
+	
+	
+	
+	
+	
+	///////////************** GETTERS
 	
 	//given the subclass as a string, give me the super class's GNode
 	public GNode getSuperclass(String sc) 
@@ -179,6 +206,14 @@ public class InheritanceHandler extends Visitor {
 		return n.getStringProperty("name");
     }
 	
+	
+	
+	
+	
+	
+	
+	
+	///////////************** DEBUG
 	
 	//print classes for debugging purposes/prove our midterm stuff works
 	public void printClassTree() 
