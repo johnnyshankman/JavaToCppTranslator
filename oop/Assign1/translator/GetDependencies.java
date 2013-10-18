@@ -62,7 +62,7 @@ public class GetDependencies extends Tool {
     }
 
 
-
+    String[] packageStatement = new String[10]; 
     String[] files = new String[100];
     int startfiles = 0;
     public void process(Node node) {
@@ -70,10 +70,9 @@ public class GetDependencies extends Tool {
 	
 	new Visitor() {
 	    
+        
             
-            
-                
-	    public void visitImportDeclaration(GNode n) throws IOException, ParseException{
+        public void visitImportDeclaration(GNode n) throws IOException, ParseException{
 		// runtime.console().p("This is an import statement.").p(n.getNode(1).toString()).pln().flush();
 		
 		String fileToImport = "";
@@ -91,14 +90,24 @@ public class GetDependencies extends Tool {
 		getFile();
 		
 	    }
-	    
+        /*
+         * @param n Get Depenedencies from the given package using the node. all the reference types that 
+            become available after being specified in a certain package can now be used 
+         * 
+         */
 	    public void visitPackageDeclaration(GNode n) {
-		runtime.console().p("This is a package statement.").pln().flush();
-		visit(n);
+            runtime.console().p((String)n.getNode(1).get(0) + "   " + (String)n.getNode(1).get(1) + "  " + (String)n.getNode(1).get(2) ).pln().flush();
+
+            packageStatement[0] = ((String)n.getNode(1).get(0)); 
+            packageStatement[1] = ((String)n.getNode(1).get(1)); 
+            packageStatement[2] = ((String)n.getNode(1).get(2)); 
+
+            visit(n); 
 		
 	    }
 	    
-	    
+        
+      
 	    public void visit(Node n) {
 		for (Object o : n) if (o instanceof Node) dispatch((Node) o);
 	    }
@@ -118,11 +127,11 @@ public class GetDependencies extends Tool {
 	    {
 		
 				        
-		System.out.println("Dependency file: " + ((String)System.getProperty("user.dir")) + "/src" + files[i]);
+	//	System.out.println("Dependency file: " + ((String)System.getProperty("user.dir")) + "/src" + files[i]);
 	        	File file = locate(((String)System.getProperty("user.dir")) + "/src" + files[i]);
 						Reader in = runtime.getReader(file);
 						tree[i] = parse(in, file);
-						System.out.println(tree[i]);					
+									
 				
 				}
 			}
