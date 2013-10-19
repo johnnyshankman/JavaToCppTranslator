@@ -113,8 +113,8 @@ public class InheritanceHandler extends Visitor {
 		GNode object = GNode.create("Class");
 		object.setProperty("name", "Object");
 		GNode classHeaderDeclaration = GNode.create("ClassHeaderDeclaration");
-		classHeaderDeclaration.add( objectClassVirtualTable() ); //need to write these methods
-		classHeaderDeclaration.add( objectClassDataLayout() ); //need to write these methods
+		classHeaderDeclaration.add(initializeVirtualTable); //need to write these methods
+		classHeaderDeclaration.add(initializeDataLayout); //need to write these methods
 		object.add(classHeaderDeclaration);
 
 		GNode string = GNode.create("Class");
@@ -143,6 +143,30 @@ public class InheritanceHandler extends Visitor {
 		classTree.add(array);
 		//do i need to do integer?
 	}
+	
+	//creates Object's virtual table, each method is a child of VTableDeclaration
+	GNode initializeVirtualTable(){
+		GNode virtualTable = GNode.create("VTableDeclaration");
+		//0 add __isa
+		//1 add __delete
+		//2 add hashcode
+		//3 add equals
+		//4 add getClass
+		//5 add toString
+		//6 add constructor
+	}
+	
+	//creates Object's data layout, each data field is a child of DataLayoutDeclaration
+	GNode initializeDataLayout(){
+		GNode dataLayout = GNode.create("DataLayoutDeclaration");
+		//0 add vtable pointer
+		//1 add node containing list of data fields
+		//2 add node to hold constructors
+		//3 add node containing list of methods
+		//4 not sure what goes in this child
+		
+	}
+	
 	
 	
 	
