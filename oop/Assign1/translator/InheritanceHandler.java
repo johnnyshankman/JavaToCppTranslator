@@ -53,6 +53,13 @@ public class InheritanceHandler extends Visitor {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
 	///////////************** TREE/CLASS PROCESSING
 	
 	public void visit(Node n) 
@@ -89,6 +96,8 @@ public class InheritanceHandler extends Visitor {
 		parent.addNode(newClassNode); //add child as the child of the parent node 
     }
 	
+    
+    
     
     
     
@@ -135,6 +144,13 @@ public class InheritanceHandler extends Visitor {
 		//do i need to do integer?
 	}
 	
+	
+	
+	
+	
+	
+	
+	
 	///////////************** FIELD HANDLING
 	
 	public void visitFieldDeclaration(GNode n){
@@ -144,13 +160,95 @@ public class InheritanceHandler extends Visitor {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
 	///////////************** (VIRTUAL) METHOD HANDLING
 	
 	public void visitMethodDeclaration(GNode n){
-		//everytime we visit a declaration either:
-        //(case of overriding)overwrite the methods virtualMethodPointer to the new one it should now point to
-        //(all other times) creat the virtualMethodPointer and append it to the VirtualTable
-        //make sure to thoroughly create the methods signature
+		/*everytime we visit a declaration
+		 * create new a virtual method signature
+		 * (case of overriding)overwrite the old virtualMethodPointer with the new one
+		 * (all other times) creat the virtualMethodPointer and append it to the VirtualTable
+		 * also make sure to edit the vtables constructor accordingly
+        **/
+		
+		
+		//--Method Node Editing
+		
+		String methodName = n.get(3).getString(0);
+		
+		if(methodName == "main")
+			return; //ignore main methods
+		
+		betterMethodName = appendParamsToMethodName(methodName); //write this method
+		n.set(3, betterMethodName); //overwrite name with better name that includes params in the name itself
+		
+		//--Adding '__this' to PARAMATERS node as a 'FormalParameter' GNode
+		GNode thisFormParam = GNode.create("FormalParameter");
+		thisFormParam.add(null); //no modifiers to set
+		thisFormParam.add(createTypeNode(className)); //set type of parameter
+		thisFormParam.add(null); //nothing to set
+		thisFormParam.add("__this"); //set name of parameter
+		thisFormParam.add(null); //nothing to set
+		n.set(4, GNode.ensureVariable((GNode)n.getNode(4)).add(0,thisFormParam) ); //go to PARAMETERS node, add the thisFormParam node we just made at 0th child
+		
+		
+		//--Creating new VirtualMethodDeclaration node to put in VTable
+		GNode vMethodSig = GNode.create("VirtualMethodDeclaration");
+		vMethodSig.add(n.get(2)); //return type
+		vMethodSig.add(mangledName); //method name
+		vMethodSig.add((GNode)n.get(4)); //parameters   //in the other version they make a copy and then change the structure so that
+														      //params is just a list of paramater TYPES (held at n.get(4).get(1).getNode(indexofParam).get(1)
+		
+		
+		//--Assessing Override Status and Adding VirtualMethodDeclaration to VTable accordingly
+		
+		int overridenMethodIndex = indexOfOverridingMethod(n, (GNode)currentHeaderNode.getNode(0) ); //give it the MethodDeclaration node and current version of VTable
+		
+		//overrides inherited method
+		if( overridenMethodIndex != (-1) ) 
+		{
+			currentHeaderNode.getNode(0).set(overridenMethodIndex, vMethodSig); // replace the inherited method sig with new one
+			
+			//adding method's pointer to the constructor
+			
+			int constructorSlot = currentHeaderNode.getNode(0).size()-1;
+			GNode vtConstructorPtrList = (GNode)currentHeaderNode.getNode(0).getNode(constructorSlot).getNode(4); //4 is where the pointers are held
+			GNode newPtr = GNode.create( "vtMethodPointer" ); //create a new vMethodPointer
+			newPtr.add(betterName); //append name to pointer
+			newPtr.add(createTypeNode( "__"+className)); //className is the caller class
+			newPtr.add(GNode.create( "FormalParameters")); //append params
+			vtConstructorPtrList.set(overridenMethodIndex, newPtr); //replace the inherited ptr with newPtr
+			
+		}
+		//is a new method without overriding
+		else 
+		{
+			int newMethodIndex = (currentHeaderNode.getNode(0).size()-1); //append new method to VTable just before the constructor (which is last aka index+1)
+			currentHeaderNode.getNode(0).add(newMethodIndex, vMethodSig); //append to VTable
+			
+			//add new pointer to the constructor
+			int constructorSlot = currentHeaderNode.getNode(0).size()-1;
+			GNode vtConstructorPtrList = (GNode)currentHeaderNode.getNode(0).getNode(constructorSlot).getNode(4); //4 is where the pointers are held
+			GNode newPtr = GNode.create( "vtMethodPointer" ); //create a new vMethodPointer
+			newPtr.add(betterName); //append name to pointer
+			newPtr.add(createTypeNode( "__"+className)); //className is the caller class
+			newPtr.add(GNode.create( "FormalParameters")); //append params
+			vtConstructorPtrList.add( newPtr ); //add new ptr at the end of ptr list
+			
+			//add new method to this class's data layout/list of methods
+			GNode thisDataLayoutsMethodList = (GNode)currentHeaderNode.getNode(1).getNode(3);
+			GNode method = GNode.create( "StaticMethodHeader" );
+			method.add(n.get(2)); //append return type of method
+			method.add(betterMethodName); //append method's name
+			method.add(formalParameters); //append method's parameters
+			thisDataLayoutsMethodList.add(method); //add this method to the method list
+		}
 	}
 	
 	
@@ -160,6 +258,9 @@ public class InheritanceHandler extends Visitor {
 	public void visitConstructorDeclaration(GNode n){
 		//literally no idea what this needs to do
 	}
+	
+	
+	
 	
 	
 	
@@ -205,6 +306,12 @@ public class InheritanceHandler extends Visitor {
     }
 	
 	
+	
+	
+	
+	
+	
+	
 	///////////************** HELPER METHODS
     
     GNode inheritParentsHeader(GNode parentHeader){
@@ -221,7 +328,19 @@ public class InheritanceHandler extends Visitor {
         //just saves a dickload of code cause we do this a fewtimes when creating vtable stuff
     }
 	
-	
+    //n is the method declaration node
+    //currentVTable is the current Vtable...
+    //returns -1 if the method does not override any of the methods in currentVTable
+    int indexOfOverridingMethod(GNode  n, GNode currentVTable) {
+		String methodName = n.get(3).toString(); //get method name
+
+		for(int i = 1; i < currentVTable.size()-1; i++) { //start at one to ignore __isa declaration... conclude at size-1 to ignore constructor declaration
+			if(methodName.equals(currentVTable.getNode(i).get(1).toString())) {
+				return i; //return index into VTable where method that needs to be overridden lies
+			}
+		}
+		return -1; //method does not override anything in currentVTable
+    }
 	
 	
 	///////////************** DEBUG
