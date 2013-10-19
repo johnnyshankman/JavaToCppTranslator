@@ -326,6 +326,7 @@ public class InheritanceHandler extends Visitor {
         //write (the global variable) className's header as a copy of its parentHeader's header
     }
 	
+    
     GNode createTypeNode(String type){
         //creates/returns a "Type" node, followed by null node, followed by either "QualifiedIdentifier" or "PrimitiveType" node, followed by the string (not a node)
         //remember that we always make ASTs like this backwards
@@ -336,21 +337,44 @@ public class InheritanceHandler extends Visitor {
         //just saves a dickload of code cause we do this a fewtimes when creating vtable stuff
     }
 	
+    
     //n is the method declaration node
     //currentVTable is the current Vtable...
     //returns -1 if the method does not override any of the methods in currentVTable
     int indexOfOverridingMethod(GNode  n, GNode currentVTable) {
 		String methodName = n.get(3).toString(); //get method name
 
-		for(int i = 1; i < currentVTable.size()-1; i++) { //start at one to ignore __isa declaration... conclude at size-1 to ignore constructor declaration
-			if(methodName.equals(currentVTable.getNode(i).get(1).toString())) {
+		for(int i = 1; i < currentVTable.size()-1; i++)  //start at one to ignore __isa declaration... conclude at size-1 to ignore constructor declaration
+		{ 
+			if(methodName.equals(currentVTable.getNode(i).get(1).toString())) 
+			{
 				return i; //return index into VTable where method that needs to be overridden lies
 			}
 		}
 		return -1; //method does not override anything in currentVTable
     }
 	
+    //same as method version
+    int indexOfOverridenField(GNode newField, GNode currentDataLayout) {
+		String fieldName = newField.getNode(2).getNode(0).get(0).toString();
+		String existingField;
+		for(int i = 0; i < currentDataLayout.size(); i++) //iterate through every field
+		{
+			if(fieldName.equals(currentDataLayout.getNode(i).getNode(2).getNode(0).get(0).toString())) //equals the current existing field
+				return i; //return index into DataLayout where the field that need to be overriden lies
+		}
+		return -1; //field does not override an existing field in DataLayout
+    }
 	
+    
+    
+    
+    
+    
+    
+    
+    
+    
 	///////////************** DEBUG
 	
 	
