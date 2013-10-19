@@ -139,7 +139,7 @@ public class InheritanceHandler extends Visitor {
 		//has been filled in correctly
 		classTree = object;
 		classTree.add(string);
-		classTree.add(class); 
+		classTree.add(classNode); 
 		classTree.add(array);
 		//do i need to do integer?
 	}
@@ -201,7 +201,7 @@ public class InheritanceHandler extends Visitor {
 		//--Creating new VirtualMethodDeclaration node to put in VTable
 		GNode vMethodSig = GNode.create("VirtualMethodDeclaration");
 		vMethodSig.add(n.get(2)); //return type
-		vMethodSig.add(mangledName); //method name
+		vMethodSig.add(betterMethodName); //method name
 		vMethodSig.add((GNode)n.get(4)); //parameters   //in the other version they make a copy and then change the structure so that
 														      //params is just a list of paramater TYPES (held at n.get(4).get(1).getNode(indexofParam).get(1)
 		
@@ -250,6 +250,14 @@ public class InheritanceHandler extends Visitor {
 			thisDataLayoutsMethodList.add(method); //add this method to the method list
 		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
