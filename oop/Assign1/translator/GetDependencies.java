@@ -72,7 +72,7 @@ public class GetDependencies extends Tool {
 	    
         
             
-        public void visitImportDeclaration(GNode n) throws IOException, ParseException{
+        public GNode[] visitImportDeclaration(GNode n) throws IOException, ParseException{
 		// runtime.console().p("This is an import statement.").p(n.getNode(1).toString()).pln().flush();
 		
 		String fileToImport = "";
@@ -87,7 +87,8 @@ public class GetDependencies extends Tool {
 		runtime.console().p(files[startfiles]).pln().flush();
 		startfiles++;
 		visit(n);
-		getFile();
+		
+		return getFile(); 
 		
 	    }
         /*
@@ -137,19 +138,7 @@ public class GetDependencies extends Tool {
 			}
 			return tree;
 	    } 
-
-
-
-	  
-
-	 
-
-
-
-
-
-
- 
+      
     public static void main(String[] args) {
 	System.out.println();
        System.out.println("NOTE: This does not deal with import declarations that end in *");
