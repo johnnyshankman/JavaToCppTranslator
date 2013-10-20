@@ -204,11 +204,10 @@ public class InheritanceHandler extends Visitor {
 			currentHeaderNode.getNode(1).getNode(1).add(n);
 		}
 		
-		boolean isStatic ( GNode currentNode ) {
-			for( Object o : currentNode ) if ( ((GNode)o).get(0).equals("static")) return true;
-			return false
-		}
+        
 		
+		
+        //Johnny: I already wrote this method in the "Helper Methods" section below, wazzup with the double declaration?
 		int indexOfOverridingField ( GNode OverrideField, GNode CurrentDataLayout) {
 			
 			//initialize string for comparison
@@ -444,6 +443,13 @@ public class InheritanceHandler extends Visitor {
 		return -1; //field does not override an existing field in DataLayout
     }
 	
+    //returns wheter or not a certain method is static
+    //also does this work? why is this a for loop? shouldnt this just take a field node as a param and then do a quick get(x) to check the node
+    //which should hold whether or not it's static?
+    boolean isStatic ( GNode currentNode ) {
+    		for( Object o : currentNode ) if ( ((GNode)o).get(0).equals("static")) return true;
+			return false
+		}
     
     
     
