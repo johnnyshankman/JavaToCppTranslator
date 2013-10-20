@@ -178,8 +178,62 @@ public class InheritanceHandler extends Visitor {
 	///////////************** FIELD HANDLING
 	
 	public void visitFieldDeclaration(GNode n){
-		//create data layout
-		//adds fields to it
+		
+		/* 
+		 * create new a data layout for that field declaration 
+		 * override to determine if field is in layout or not, override index...
+		 * and all found fields into data layout
+		 * just create DATA LAYOUT
+        **/
+		
+		//static vars don't get initialized in the data layout, they are added to classStaticVars
+		if ( isStatic( (GNode)n.getNode(0) ){		//if method is static, add to classStaticVars
+			classStaticVars.add( (GNode)n.getNode(2) );
+			n.getNode(2).getNode(2).set(2, null); //sets location to null 
+		}
+		
+		//set overriddenMethodIndex 
+		int overridenFieldIndex = indexOfOverridingField(n, (GNode)currentHeaderNode.getNode(1).getNode(1) );
+		
+		if ( overridenFieldIndex >= 0 ) {
+			//if field needs to be overriden, use .set() to override field at specified index
+			currentHeaderNode.getNode(1).getNode(1).set(overridenFieldIndex, n);
+		}
+		else {
+			//if field won't be overriden, add as regular field using .add()
+			currentHeaderNode.getNode(1).getNode(1).add(n);
+		}
+		
+		boolean isStatic ( GNode currentNode ) {
+			for( Object o : currentNode ) if ( ((GNode)o).get(0).equals("static")) return true;
+			return false
+		}
+		
+		int indexOfOverridingField ( GNode OverrideField, GNode CurrentDataLayout) {
+			
+			//initialize string for comparison
+			String fieldName = OverrideField.getNode(2).getNode(0).get(0).toString();
+			String comparefieldName;
+			
+			// Search layout to see if field should be overridden 
+
+			for (int i = 0; i < CurrentDataLayout.size(); i++ ) {
+				comparefieldName = CurrentDataLayout.getNode(i).getNode(2).getNode(0).get(0).toString();
+				if ( fieldName.equals(comparefieldName) ) {
+					return i;
+				}
+			}			
+		
+			//compare current field, with override things
+			
+			// If not overriden, return -1
+            return -1;
+			
+		}
+		//NOTES & COMMENTS 
+		
+		//add the data field to the classes' data layout declaration
+		
 	}
 	
 	
