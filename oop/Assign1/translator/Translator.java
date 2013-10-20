@@ -108,8 +108,8 @@ public class Translator extends Tool {
         GNode[] astArray = new GNode[50]; //arbitrary size
         astArray[0] = (GNode) node; //0th spot is the original java file's AST
         GetDependencies dependencyHandler = new GetDependencies();
-		astArray = dependencyHandler.????(astArray); //we need a method that takes the astArray as a paramater and returns an array populated with the asts of all dependencies
-		//asttArray[0] = (GNode)node; this shouldn't be necessary if GetDependencies returns correctly
+		astArray = dependencyHandler.getFile(); //store the array of java ASTs
+		asttArray[0] = (GNode)node; //just to ensure we have the original java ast in slot 0 still
           
          
           
