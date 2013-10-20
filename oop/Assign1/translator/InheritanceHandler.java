@@ -160,15 +160,91 @@ public class InheritanceHandler extends Visitor {
 	GNode initializeDataLayout(){
 		GNode dataLayout = GNode.create("DataLayoutDeclaration");
 		//0 add vtable pointer
-		//1 add node containing list of data fields
-		//2 add node to hold constructors
-		//3 add node containing list of methods
-		//4 not sure what goes in this child
+		dataLayout.add( createSkeletonDataField( "__Object_VT*", "__vptr" ) );
 		
+		//1 add node containing list of data fields
+		// Information to node added later. 
+		dataLayout.add(GNode.create("DataFieldList") ); 
+		
+		//2 add node to hold constructors
+		GNode constructorList = GNode.create("ConstructorHeaderList");
+		constructorList.add(0, className);
+		dataLayout.add(constructorList);
+		
+		//3 add node containing list of methods
+		//Create a node
+		GNode methodHeaders = Gnode.create("MethodHeaderList");
+		//adding static methods:
+        methodHeaders.add( createSkeletonStaticMethodHeader( "int32_t", "hashCode", new String[]{"Object"} ) ); //int32_t (*hashCode)(Object);
+        methodHeaders.add( createSkeletonStaticMethodHeader( "bool", "equals", new String[]{"Object","Object"} ) ); //bool (*equals)(Object, Object);
+        methodHeaders.add( createSkeletonStaticMethodHeader( "Class", "getClass", new String[]{"Object"} ) ); //Class (*getClass)(Object);
+        methodHeaders.add( createSkeletonStaticMethodHeader( "String", "toString", new String[]{"Object"} ) ); //String (*toString)(Object);
+        
+		dataLayout.add(methodHeaders);
+		//4 not sure what goes in this child
+		//Creates a static skeleton datafield and add it. 
+		//Why is this necessary? . 
+        dataLayout.add( createSkeletonStaticDataField( "__Object_VT", "__vtable" ) );
+		
+        //return the layout
+		return dataLayout;
 	}
 	
+	// Creates a 'skeleton' datafield  with passed args.
+	// Returns a node with Modifiers specified to Type, and Declarators with Name;
+	// Structure goes like this: 
+	// Node"Field Declaration" 
+	// 		-> Node "Modifiers"
+	// 		-> Node Type 
+	// 		-> Node " Declartors" 
+	// 		(Within Declarators node)->Node "Declarator" 
+	//						(Within Declarator Node) -> Name 
+	// 												 -> Nul Node x 2 
+    GNode createSkeletonDataField( String type, String name ) {
+                GNode fieldDeclaration = GNode.create( "FieldDeclaration" );
+                fieldDeclaration.add(GNode.create("Modifiers")); //empty value for Modifiers()
+                fieldDeclaration.add( createTypeNode( type ) );
+                GNode declrs = GNode.create("Declarators");
+                GNode declr = GNode.create("Declarator");
+                declr.add( name );
+                declr.add( null ); 
+                declr.add( null ); //need to fill in these nulls for printer compatibility
+                declrs.add( declr );
+                fieldDeclaration.add( declrs );
+                return fieldDeclaration;
+    }
+    
+    //Creats a 'skeleton' Static data field with passed args.  
+    // recursively calls Skeleton Data field, except adding Static to Modifiers Node and overwrite Modifiers Node made in Skeleton data field
+    GNode createSkeletonStaticDataField( String type, String name ) {
+        GNode Sdatafield = createSkeletonDataField( type, name ); //just create a standard data field
+        GNode modifiers = GNode.create("Modifiers");
+        GNode staticMod = GNode.create("Modifier"); //then add the static keyword
+        staticMod.add("static");
+        modifiers.add(staticMod);
+        Sdatafield.set(0,modifiers);
+        return  Sdatafield;
+     }
 	
-	
+    // Creates 'Skeleton' for static virtual method header.
+    // Structure Goes like this: 
+    // Node "Static Method Header 
+    // 		->return Type 
+    //		->Name of Method 
+    // 		->"Formal Parameters" 
+    // 				-> Type of node specified to method arguments 
+    GNode createSkeletonStaticMethodHeader( String returnType, String methodName, String[] parameterTypes ) {
+        GNode SmethodHeader = GNode.create("StaticMethodHeader");
+        SmethodHeader.add( createTypeNode( returnType ) );
+        SmethodHeader.add( methodName ); //method name is just a string still
+        GNode params = GNode.create("FormalParameters"); //node for a parameter list
+        for( String s : parameterTypes ) {
+                params.add( createTypeNode(s) );
+        }
+        SmethodHeader.add( params );
+        return retVal;
+}
+
 	
 	
 	
