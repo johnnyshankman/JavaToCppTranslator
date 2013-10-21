@@ -475,7 +475,7 @@ public class InheritanceHandler extends Visitor {
 	
     
     //same as method version
-    int indexOfOverridenField(GNode newField, GNode currentDataLayout) {
+    int indexOfOverridingField(GNode newField, GNode currentDataLayout) {
 		String fieldName = newField.getNode(2).getNode(0).get(0).toString();
 		String existingField;
 		for(int i = 0; i < currentDataLayout.size(); i++) //iterate through every field
