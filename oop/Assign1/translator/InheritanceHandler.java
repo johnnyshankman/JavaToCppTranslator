@@ -279,28 +279,7 @@ public class InheritanceHandler extends Visitor {
         
 		
 		
-        //Johnny: I already wrote this method in the "Helper Methods" section below, wazzup with the double declaration?
-		int indexOfOverridingField ( GNode OverrideField, GNode CurrentDataLayout) {
-			
-			//initialize string for comparison
-			String fieldName = OverrideField.getNode(2).getNode(0).get(0).toString();
-			String comparefieldName;
-			
-			// Search layout to see if field should be overridden 
-
-			for (int i = 0; i < CurrentDataLayout.size(); i++ ) {
-				comparefieldName = CurrentDataLayout.getNode(i).getNode(2).getNode(0).get(0).toString();
-				if ( fieldName.equals(comparefieldName) ) {
-					return i;
-				}
-			}			
-		
-			//compare current field, with override things
-			
-			// If not overriden, return -1
-            return -1;
-			
-		}
+        
 		//NOTES & COMMENTS 
 		
 		//add the data field to the classes' data layout declaration
@@ -594,17 +573,17 @@ public class InheritanceHandler extends Visitor {
 	
     
     //same as method version
-    int indexOfOverridenField(GNode newField, GNode currentDataLayout) {
+    int indexOfOverridingField(GNode newField, GNode currentDataLayout) {
 		String fieldName = newField.getNode(2).getNode(0).get(0).toString();
-		String existingField;
+		
 		for(int i = 0; i < currentDataLayout.size(); i++) //iterate through every field
 		{
-			if(fieldName.equals(currentDataLayout.getNode(i).getNode(2).getNode(0).get(0).toString())) //equals the current existing field
+			if(fieldName.equals(currentDataLayout.getNode(i).getNode(2).getNode(0).get(0).toString())){ //equals the current existing field
 				return i; //return index into DataLayout where the field that need to be overriden lies
+			}
 		}
 		return -1; //field does not override an existing field in DataLayout
     }
-	
     
     
     //returns wheter or not a certain method is static
