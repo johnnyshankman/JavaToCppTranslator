@@ -121,19 +121,19 @@ public class InheritanceHandler extends Visitor {
 		string.setProperty("name", "String");
 		string.setProperty("parentClassNode", objectNode);
 		className = "String";
-		string.add( inheritHeader( classHeaderDeclaration ) ); //need to write this method as well
+		string.add( inhertParentHeader( classHeaderDeclaration ) ); //need to write this method as well
 
 		GNode classNode = GNode.create("Class");
 		classNode.setProperty("name", "Class");
 		classNode.setProperty("parentClassNode", objectNode);
 		className = "Class";
-		classNode.add( inheritHeader( classHeaderDeclaration ) );
+		classNode.add( inhertParentHeader( classHeaderDeclaration ) );
 
 		GNode array = GNode.create("Class");
 		array.setProperty("name", "Array");
 		array.setProperty("parentClassNode", objectNode);
 		className = "Array";
-		array.add( inheritHeader( classHeaderDeclaration ) );
+		array.add( inhertParentHeader( classHeaderDeclaration ) );
 		
 		//actually add the nodes to our class tree after all the info
 		//has been filled in correctly
@@ -498,7 +498,7 @@ public class InheritanceHandler extends Visitor {
 	///////////************** HELPER METHODS
     
     
-    GNode inheritParentsHeader(GNode parentHeader){
+    GNode inheritParentHeader(GNode parentHeader){
     	/**
     	 * create a deepcopy of the parent header
     	 * utilizing global className, edit the parent's header
