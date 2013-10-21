@@ -69,7 +69,9 @@ public class InheritanceHandler extends Visitor {
 		}
 	}
 
-
+	
+	
+	
     public void visitClassDeclaration(GNode n) {
 		className = n.get(1).toString();  //for the record, get(#) goes down the tree according to the # index and then returns that node
 		GNode newClassNode = GNode.create("Class"); //create Class node
@@ -160,7 +162,7 @@ public class InheritanceHandler extends Visitor {
 		virtualTable.add( createVTableVirtualMethodDeclaration( "bool", "equals", new String[]{"Object","Object"} ));
 		virtualTable.add( createVTableVirtualMethodDeclaration( "Class", "getClass", new String[]{"Object"} ));      
 		virtualTable.add( createVTableVirtualMethodDeclaration( "String", "toString", new String[]{"Object"} )); 
-		virtualTable.add( initializeVTConstructor( retVal ) );
+		virtualTable.add( initializeVTableConstructor(virtualTable));
 		return virtualTable;
 	}
 	
@@ -193,6 +195,46 @@ public class InheritanceHandler extends Visitor {
 		dataLayout.add( createStaticDataFieldDeclaration( "__Object_VT", "__vtable" ) ); //4th child
 		return dataLayout;
 	}
+	
+	//creates Objects constructor in the vTable
+	//constructors in general are always held as the last slot in the VTable
+	//children --> modifiers --> null --> name --> formal params --> method ptr list --> code block
+	GNode initializeVTableConstructor( GNode vTable ) {
+		GNode constructor = GNode.create("VTConstructorDeclaration");
+		
+		constructor.add( GNode.create( "Modifiers" ) ); //empty modifiers
+		
+		constructor.add( null ); //
+	    
+		constructor.add( "__Object_VT" ); //name of constructor
+		
+		constructor.add( GNode.create( "FormalParameters" ).add(null) ); //no parameters
+		
+		final GNode methodPtrList = GNode.create( "vtMethodPointersList" );
+		methodPtrList.add( GNode.create( "ClassISAPointer" ).add( "__Object" ) ); //hard coded __isa(__Object...) pointer
+		
+		//visit all the virtual method declarations in the vtable and make an appropriate pointer in the constructor
+		new Visitor() { 
+			public void visit( Node n ) {
+				for( Object o : n ) if (o instanceof GNode ) dispatch((GNode)o);
+			}
+			public void visitVirtualMethodDeclaration( GNode n ) {
+				GNode newPtr = GNode.create( "vtMethodPointer" );
+				// 0  method name
+				// 1  __Object
+				// 2 - params
+				newPtr.add( n.get(1) ); //0th method name
+				newPtr.add( createTypeNode( "__Object" ) ); //1st target object
+				newPtr.add( GNode.create( "FormalParameters" ) ); //2nd form parameters, but there are none so unneeded?
+				methodPtrList.add( newPtr ); //append this method to the methodptrlist
+			}
+		}.dispatch(vTable);
+		
+		
+		constructor.add( methodPtrList ); // 3rd method pointer list
+		constructor.add( GNode.create( "Block" ) ); // 4th | empty code block is needed to complete the constructor, all real initialization is using the default constructor
+		return constructor;
+    }
 	
 	
 	
@@ -378,7 +420,9 @@ public class InheritanceHandler extends Visitor {
 	///////////************** CONSTRUCTOR HANDLING
 	
 	public void visitConstructorDeclaration(GNode n){
-		//literally no idea what this needs to do
+		//this creates the constructor node in DataLayout
+		//it basically just 
+		//append static vars to constructor sig
 	}
 	
 	
@@ -473,7 +517,7 @@ public class InheritanceHandler extends Visitor {
 	
     
     //same as method version
-    int indexOfOverridingField(GNode newField, GNode currentDataLayout) {
+    int indexOfOverridenField(GNode newField, GNode currentDataLayout) {
 		String fieldName = newField.getNode(2).getNode(0).get(0).toString();
 		String existingField;
 		for(int i = 0; i < currentDataLayout.size(); i++) //iterate through every field
@@ -602,6 +646,22 @@ public class InheritanceHandler extends Visitor {
     	return typeNode;
     	
     }
+    
+    
+    public String appendParamsToMethodName(GNode methodNode) {
+		String name = methodNode.getString(3);
+		GNode parametersBlock = (GNode)methodNode.getNode(4);
+		int numParams = parametersBlock.size();
+		String paramsNames[] = new String[numParams];
+		for( int i = 0; i < numParams; i++) {
+			GNode thisTypeNode = (GNode)parametersBlock.getNode(i).getNode(1);
+			paramsNames[i] = thisTypeNode.getNode(0).getString(0);
+		}
+		for( String s : paramsNames ) {
+			name += "$" + s;
+		}
+		return name;
+	}
     
     
     
