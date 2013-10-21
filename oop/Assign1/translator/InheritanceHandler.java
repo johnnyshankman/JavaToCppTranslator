@@ -516,13 +516,63 @@ public class InheritanceHandler extends Visitor {
     	 * 
     	 * overwriting/changing the vtable pointer in the 0th child slot in our copy of the datalayout
     	 * overwriting/changing the constructor list so that it contains className's constructor and clears it of its parent's constructors
-    	 * editing the static method list so that the correct class name is held in the "this part"
+    	 * editing the static method list so that the correct class name is held in the "this"
     	 * 
     	 * overwriting the last child of the datalayout so that it's  __className_VT and __vTable
     	 */
     	
     	GNode childHeader = deepCopy(parentHeader);
     	GNode childVirtualTable = (GNode) childHeader.getNode(0);
+    	
+    	int sizeOfTable = childVirtualTable.size();
+    	int constructor = (sizeOfTable-1);
+    	
+    	childVirtualTable.getNode(constructor).getNode(4).getNode(0).set(0, "__"+className ); //changing the Class __isa pointer in the constructor;
+    	//what is get node(4) method pointer list
+    	//waht is get node(0) is the method name
+    	// set the __isA into __className
+    	
+    	//now handle all the methods in the method pointer list the first and last method
+    	for( int i = 1; i < constructor; i++ ) 
+    	{ //start at one to ignore Class __isa, end at size-1 to ignore constructor
+			GNode thisVirtualMethod = (GNode)childVirtualTable.getNode(i); //get a method
+			thisVirtualMethod.getNode(2).getNode(0).getNode(0).set(0, className);
+			//what is getNode(2) | formal paramaters node
+			//get node(0) would be the 0th formal paramter as a String
+			//get node(0) would be the 0th child of said String paramater
+			//and then set the 0th child of THAT^^
+		}
+    	
+    	GNode vTableConstructorPointerList = (GNode)copyVT.getNode(constructor).getNode(4); //method list in constructor
+    	
+		for( int i = 1; i < vTableConstructorPointerList.size(); i++ ) { // start at one to ignore __isa
+			GNode thisPointer = (GNode)vtConstructorPointerList.getNode(i);
+			GNode caster = GNode.create("PointerCast");
+			caster.add( copyVT.getNode(i).getNode(0) ); //return value
+			caster.add( copyVT.getNode(i).getNode(2) ); //parameters
+			
+			if( thisPointer.size() >= 4 ) {
+				thisPointer.set(3, caster);
+			}
+			else {
+				thisPointer.add( caster );
+			}
+		}
+		
+		GNode childDataLayout = (GNode)childHeader.getNode(1);
+		childDataLayout.set(0, createSkeletonDataField( "__"+className+"_VT*", "__vptr" )); //setting the right vtable pointer name
+		
+		GNode constructorList = GNode.create("ConstructorHeaderList");
+		constructorList.add(0, className);
+		
+		childDataLayout.set(2, constructorList);//clear out the constructor list
+		GNode statMethList = (GNode)childDataLayout.getNode(3);
+		for( Object o : statMethList ) { //changing the 'this' parameter types in the static data layout methods
+			((GNode)o).getNode(2).getNode(0).getNode(0).set(0, className); //ugh is that ugly or what?
+		}
+		
+		childDataLayout.set(4, createSkeletonStaticDataField( "__"+className+"_VT", "__vtable" ));
+		return childHeader;
     }
 	
     
