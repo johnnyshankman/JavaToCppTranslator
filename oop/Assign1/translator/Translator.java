@@ -115,7 +115,7 @@ public class Translator extends Tool {
           
         runtime.console.pln("Begin inheritance and data layout handling.\n").flush();
         
-        InheritanceHandler dataLayout = new InheritanceHandler(astArray);
+        InheritanceHandler layout = new InheritanceHandler(astArray);
         //done
         
         
