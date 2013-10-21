@@ -497,8 +497,22 @@ public class InheritanceHandler extends Visitor {
 	
 	///////////************** HELPER METHODS
     
+    
     GNode inheritParentsHeader(GNode parentHeader){
-        //write (the global variable) className's header as a copy of its parentHeader's header
+    	/**
+    	 * create a deepcopy of the parent header
+    	 * utilizing global className, edit the parent's header
+    	 * when editing is done, we have the new child's header
+    	 * 
+    	 * things like changing __isA in the pointer in the constructor
+    	 * fixing the class caller name in each virtual method in the vtable
+    	 * 
+    	 * overwriting/changing the vtable pointer in the 0th child slot in our copy of the datalayout
+    	 * overwriting/changing the constructor list so that it contains className's constructor and clears it of its parent's constructors
+    	 * editing the static method list so that the correct class name is held in the "this part"
+    	 * 
+    	 * overwriting the last child of the datalayout so that it's  __className_VT and __vTable
+    	 */
     }
 	
     
