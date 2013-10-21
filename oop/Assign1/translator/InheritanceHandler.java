@@ -124,10 +124,10 @@ public class InheritanceHandler extends Visitor {
 		string.add( inheritHeader( classHeaderDeclaration ) ); //need to write this method as well
 
 		GNode classNode = GNode.create("Class");
-		class.setProperty("name", "Class");
-		class.setProperty("parentClassNode", objectNode);
+		classNode.setProperty("name", "Class");
+		classNode.setProperty("parentClassNode", objectNode);
 		className = "Class";
-		class.add( inheritHeader( classHeaderDeclaration ) );
+		classNode.add( inheritHeader( classHeaderDeclaration ) );
 
 		GNode array = GNode.create("Class");
 		array.setProperty("name", "Array");
@@ -145,8 +145,10 @@ public class InheritanceHandler extends Visitor {
 	}
 	
 	//creates Object's virtual table, each method is a child of VTableDeclaration
+	//uses various helper methods for readability and my sanity
 	GNode initializeVirtualTable(){
 		GNode virtualTable = GNode.create("VTableDeclaration");
+		//children in order:
 		//0 add __isa
 		//1 add __delete
 		//2 add hashcode
@@ -154,97 +156,50 @@ public class InheritanceHandler extends Visitor {
 		//4 add getClass
 		//5 add toString
 		//6 add constructor
+		virtualTable.add( createDataFieldDeclaration( "Class", "__isa" ) ); 
+		virtualTable.add( createVTableVirtualMethodDeclaration("void", "__delete", new String[]{"__Object*"}) ); 
+		virtualTable.add( createVTableVirtualMethodDeclaration( "int32_t", "hashCode", new String[]{"Object"} ));      
+		virtualTable.add( createVTableVirtualMethodDeclaration( "bool", "equals", new String[]{"Object","Object"} ));
+		virtualTable.add( createVTableVirtualMethodDeclaration( "Class", "getClass", new String[]{"Object"} ));      
+		virtualTable.add( createVTableVirtualMethodDeclaration( "String", "toString", new String[]{"Object"} )); 
+		virtualTable.add( initializeVTConstructor( retVal ) );
+		return virtualTable;
 	}
 	
 	//creates Object's data layout, each data field is a child of DataLayoutDeclaration
+	//uses various helper methods for readdability and my sanity
 	GNode initializeDataLayout(){
 		GNode dataLayout = GNode.create("DataLayoutDeclaration");
 		//0 add vtable pointer
-		dataLayout.add( createSkeletonDataField( "__Object_VT*", "__vptr" ) );
-		
 		//1 add node containing list of data fields
-		// Information to node added later. 
-		dataLayout.add(GNode.create("DataFieldList") ); 
-		
 		//2 add node to hold constructors
-		GNode constructorList = GNode.create("ConstructorHeaderList");
-		constructorList.add(0, className);
-		dataLayout.add(constructorList);
-		
 		//3 add node containing list of methods
-		//Create a node
-		GNode methodHeaders = Gnode.create("MethodHeaderList");
-		//adding static methods:
-        methodHeaders.add( createSkeletonStaticMethodHeader( "int32_t", "hashCode", new String[]{"Object"} ) ); //int32_t (*hashCode)(Object);
-        methodHeaders.add( createSkeletonStaticMethodHeader( "bool", "equals", new String[]{"Object","Object"} ) ); //bool (*equals)(Object, Object);
-        methodHeaders.add( createSkeletonStaticMethodHeader( "Class", "getClass", new String[]{"Object"} ) ); //Class (*getClass)(Object);
-        methodHeaders.add( createSkeletonStaticMethodHeader( "String", "toString", new String[]{"Object"} ) ); //String (*toString)(Object);
-        
-		dataLayout.add(methodHeaders);
 		//4 not sure what goes in this child
-		//Creates a static skeleton datafield and add it. 
-		//Why is this necessary? . 
-        dataLayout.add( createSkeletonStaticDataField( "__Object_VT", "__vtable" ) );
 		
-        //return the layout
+		//create node to hold constructor
+		GNode constructorList =  GNode.create("ConstructorHeaderList");
+		constructorList.add(0, className);
+		
+		//create node holding a list of method names
+		GNode objMethHeaders = GNode.create( "MethodHeaderList" ); //simple node to contain method headers, now add static methods
+		objMethHeaders.add( createStaticMethodHeader( "int32_t", "hashCode", new String[]{"Object"} ) ); //int32_t (*hashCode)(Object);
+		objMethHeaders.add( createStaticMethodHeader( "bool", "equals", new String[]{"Object","Object"} ) ); //bool (*equals)(Object, Object);
+		objMethHeaders.add( createStaticMethodHeader( "Class", "getClass", new String[]{"Object"} ) ); //Class (*getClass)(Object);
+		objMethHeaders.add( createStaticMethodHeader( "String", "toString", new String[]{"Object"} ) ); //String (*toString)(Object);
+		
+		//append all the children to the DataLayoutDeclaration GNode
+		dataLayout.add( createDataFieldDeclaration( "__Object_VT*", "__vptr" ) ); //0th child
+		dataLayout.add( GNode.create( "DataFieldList" ) ); //1st child
+		dataLayout.add( constructorList); //2nd child
+		dataLayout.add( objMethHeaders ); //3rd child
+		dataLayout.add( createStaticDataFieldDeclaration( "__Object_VT", "__vtable" ) ); //4th child
 		return dataLayout;
 	}
 	
-	// Creates a 'skeleton' datafield  with passed args.
-	// Returns a node with Modifiers specified to Type, and Declarators with Name;
-	// Structure goes like this: 
-	// Node"Field Declaration" 
-	// 		-> Node "Modifiers"
-	// 		-> Node Type 
-	// 		-> Node " Declartors" 
-	// 		(Within Declarators node)->Node "Declarator" 
-	//						(Within Declarator Node) -> Name 
-	// 												 -> Nul Node x 2 
-    GNode createSkeletonDataField( String type, String name ) {
-                GNode fieldDeclaration = GNode.create( "FieldDeclaration" );
-                fieldDeclaration.add(GNode.create("Modifiers")); //empty value for Modifiers()
-                fieldDeclaration.add( createTypeNode( type ) );
-                GNode declrs = GNode.create("Declarators");
-                GNode declr = GNode.create("Declarator");
-                declr.add( name );
-                declr.add( null ); 
-                declr.add( null ); //need to fill in these nulls for printer compatibility
-                declrs.add( declr );
-                fieldDeclaration.add( declrs );
-                return fieldDeclaration;
-    }
-    
-    //Creats a 'skeleton' Static data field with passed args.  
-    // recursively calls Skeleton Data field, except adding Static to Modifiers Node and overwrite Modifiers Node made in Skeleton data field
-    GNode createSkeletonStaticDataField( String type, String name ) {
-        GNode Sdatafield = createSkeletonDataField( type, name ); //just create a standard data field
-        GNode modifiers = GNode.create("Modifiers");
-        GNode staticMod = GNode.create("Modifier"); //then add the static keyword
-        staticMod.add("static");
-        modifiers.add(staticMod);
-        Sdatafield.set(0,modifiers);
-        return  Sdatafield;
-     }
 	
-    // Creates 'Skeleton' for static virtual method header.
-    // Structure Goes like this: 
-    // Node "Static Method Header 
-    // 		->return Type 
-    //		->Name of Method 
-    // 		->"Formal Parameters" 
-    // 				-> Type of node specified to method arguments 
-    GNode createSkeletonStaticMethodHeader( String returnType, String methodName, String[] parameterTypes ) {
-        GNode SmethodHeader = GNode.create("StaticMethodHeader");
-        SmethodHeader.add( createTypeNode( returnType ) );
-        SmethodHeader.add( methodName ); //method name is just a string still
-        GNode params = GNode.create("FormalParameters"); //node for a parameter list
-        for( String s : parameterTypes ) {
-                params.add( createTypeNode(s) );
-        }
-        SmethodHeader.add( params );
-        return retVal;
-}
-
+	
+	
+	
 	
 	
 	
@@ -263,7 +218,7 @@ public class InheritanceHandler extends Visitor {
         **/
 		
 		//static vars don't get initialized in the data layout, they are added to classStaticVars
-		if ( isStatic( (GNode)n.getNode(0) ){		//if method is static, add to classStaticVars
+		if ( isStatic( (GNode)n.getNode(0) ) ){		//if method is static, add to classStaticVars
 			classStaticVars.add( (GNode)n.getNode(2) );
 			n.getNode(2).getNode(2).set(2, null); //sets location to null 
 		}
@@ -279,7 +234,7 @@ public class InheritanceHandler extends Visitor {
 			//if field won't be overriden, add as regular field using .add()
 			currentHeaderNode.getNode(1).getNode(1).add(n);
 		}
-		
+	}
         
 		
 		
@@ -310,6 +265,10 @@ public class InheritanceHandler extends Visitor {
 		//add the data field to the classes' data layout declaration
 		
 	}
+	
+	
+	
+	
 	
 	
 	
@@ -414,11 +373,18 @@ public class InheritanceHandler extends Visitor {
 	
 	
 	
+	
+	
+	
+	
 	///////////************** CONSTRUCTOR HANDLING
 	
 	public void visitConstructorDeclaration(GNode n){
 		//literally no idea what this needs to do
 	}
+	
+	
+	
 	
 	
 	
@@ -443,12 +409,14 @@ public class InheritanceHandler extends Visitor {
 		return (GNode)child.getProperty("parentClassNode");
 	}
 	
+	
 	/*given the subclasses node, get it's name, and then make call to other getSuperclass method, return the Superclass's GNode*/
 	public GNode getSuperclass(GNode n) 
 	{
 		return getSuperclass( n.getStringProperty("name") );
 	}
 
+	
 	/*given the subclass as a string, return if it has a superclass*/
 	public boolean hasSuperclass(String sc) 
 	{
@@ -460,34 +428,32 @@ public class InheritanceHandler extends Visitor {
 			return false;
 	}
 	
-	//given a node give me the class name
+	
+	//given a classDec node give me the class name
 	public String getClassName(GNode n) 
 	{
 		return n.getStringProperty("name");
     }
 	
 	
+	// returns a Class node from the classTree using inline visitor
+    public GNode getClass(String desiredClass) {
+		//
+    }
 	
 	
 	
 	
 	
+    
+    
+    
+    
 	
 	///////////************** HELPER METHODS
     
     GNode inheritParentsHeader(GNode parentHeader){
         //write (the global variable) className's header as a copy of its parentHeader's header
-    }
-	
-    
-    GNode createTypeNode(String type){
-        //creates/returns a "Type" node, followed by null node, followed by either "QualifiedIdentifier" or "PrimitiveType" node, followed by the string (not a node)
-        //remember that we always make ASTs like this backwards
-        //
-        //we add the string on to the typeSpecifier
-        //then the typeSpecifier on to the Type node
-        //then return the Type node
-        //just saves a dickload of code cause we do this a fewtimes when creating vtable stuff
     }
 	
     
@@ -507,6 +473,7 @@ public class InheritanceHandler extends Visitor {
 		return -1; //method does not override anything in currentVTable
     }
 	
+    
     //same as method version
     int indexOfOverridenField(GNode newField, GNode currentDataLayout) {
 		String fieldName = newField.getNode(2).getNode(0).get(0).toString();
@@ -519,15 +486,124 @@ public class InheritanceHandler extends Visitor {
 		return -1; //field does not override an existing field in DataLayout
     }
 	
+    
+    
     //returns wheter or not a certain method is static
     //also does this work? why is this a for loop? shouldnt this just take a field node as a param and then do a quick get(x) to check the node
-    //which should hold whether or not it's static?
-    boolean isStatic ( GNode currentNode ) {
-    		for( Object o : currentNode ) if ( ((GNode)o).get(0).equals("static")) return true;
-			return false
+    //which should hold whether Static = true or false
+    boolean isStatic(GNode currentNode){
+    	for(Object o : currentNode) if (((GNode)o).get(0).equals("static")) return true;
+    	return false;
+    }
+    
+    
+    //creates a VirtualMethodDeclaration for the VTable
+    //children --> return type --> method name --> formal paramaters tree
+    GNode createVTableVirtualMethodDeclaration(String name, String returnType, String[] parameters){
+    	GNode virtualMethod = GNode.create("VirtualMethodDeclaration");
+    	GNode formalParameters = GNode.create("FormalParameters");
+    	for(String param : parameters)
+    	{
+    		formalParameters.add(param);
+    	} 
+    	virtualMethod.add(createTypeGNode(returnType)); //0 return
+    	virtualMethod.add(name); //1 method name
+    	virtualMethod.add(formalParameters);//2 formal parameters	
+    	return virtualMethod;
+    }
+    
+    
+    //same as above method, just slightly modified for static method
+    GNode createStaticMethodHeader(String name, String returnType, String[] parameters){
+    	GNode virtuaStaticMethod = GNode.create("StaticMethodHeader");
+    	GNode formalParameters = GNode.create("FormalParameters");
+    	for(String param : parameters)
+    	{
+    		formalParameters.add(param);
+    	}
+    	virtualStaticMethod.add(createTypeGNode(returnType)); //0 return
+    	virtualStaticMethod.add(name); //1 method name
+    	virtualStaticMethod.add(formalParameters);//2 formal parameters	
+    	return virtualStaticMethod;
+    }
+    
+    //creates a DataFieldDeclaration for the DataLayout
+    //children --> modifiers --> type node --> declarators
+    GNode createDataFieldDeclaration(String type, String name){
+    	GNode fieldDeclaration = GNode.create("FieldDeclaration"); //create fieldDec
+    	
+    	fieldDeclaration.add(GNode.create("Modifiers")); //0th child add blank Modifiers 
+    	
+    	typeNode = createTypeGNode(type);
+    	fieldDeclaration.add(typeNode);  //1st child add type
+    	
+    	
+		GNode declr = GNode.create("Declarator");
+		declr.add( name );
+		declr.add( null ); 
+		declr.add( null ); //need to fill in these nulls for printer compatibility
+		
+		GNode declrs = GNode.create("Declarators"); 
+		declrs.add( declr ); //append declarators to this node
+		
+		
+		fieldDeclaration.add( declrs ); //2nd child adds declarators
+		
+		return fieldDeclaration;
+    	
+    }
+    
+    //same as DataFieldDeclaration() but makes sure the static modifier gets in there (we leave Modifiers blank in the other method)
+    GNode createStaticDataFieldDeclaration(String type, String name){
+    	
+    	GNode staticFieldDeclaration = GNode.create("FieldDeclaration"); //create fieldDec
+    	
+    	
+    	GNode mod = GNode.create("Modifier");
+    	mod.add("static");
+    	
+    	GNode mods = GNode.create("Modifiers");
+    	mods.add(mod);
+    	
+    	staticFieldDeclaration.add(mod);
+    	
+    	
+    	typeNode = createTypeGNode(type); 
+    	fieldDeclaration.add(typeNode); 
+    	
+    	
+		GNode declr = GNode.create("Declarator");
+		declr.add( name );
+		declr.add( null ); 
+		declr.add( null ); //need to fill in these nulls for printer compatibility
+		
+		GNode declrs = GNode.create("Declarators"); 
+		declrs.add( declr ); //append declarators to this node
+		
+		
+		fieldDeclaration.add( declrs ); //add decs to fielddec node
+		
+		return fieldDeclaration;
+    }
+    
+    
+    //creates a basic Type GNode
+    GNode createTypeGNode(String type){
+    	GNode typeNode = GNode.create("Type");
+    	
+    	GNode specifier;
+    	if( type.equals("int") || type.equals("float") || type.equals("boolean") || type.equals("byte") || type.equals("short") || type.equals("long") || type.equals("double") || type.equals("char") ) { //testing for primitive, obvs needs to be expanded
+			specifier = GNode.create( "PrimitiveType" );
+		} else {
+			specifier = GNode.create( "QualifiedIdentifier" ); //separating 'qualified' class names from primitives just seems safer for now...
 		}
-    
-    
+    	typeNode.add(specifier); //1st child
+    	typeNode.add(type); //0th child?
+    	typeNode.add(null); //2nd child null
+    	
+    	return typeNode;
+    	
+    }
     
     
     
