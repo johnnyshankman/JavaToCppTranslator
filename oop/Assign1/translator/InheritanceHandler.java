@@ -69,9 +69,7 @@ public class InheritanceHandler extends Visitor {
 		}
 	}
 
-	
-	
-	
+
     public void visitClassDeclaration(GNode n) {
 		className = n.get(1).toString();  //for the record, get(#) goes down the tree according to the # index and then returns that node
 		GNode newClassNode = GNode.create("Class"); //create Class node
