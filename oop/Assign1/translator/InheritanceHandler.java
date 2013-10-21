@@ -60,6 +60,7 @@ public class InheritanceHandler extends Visitor {
 	
 	
 	
+	
 	///////////************** TREE/CLASS PROCESSING
 	
 	public void visit(Node n) 
@@ -425,6 +426,12 @@ public class InheritanceHandler extends Visitor {
 		 * then adds it to the constructor list held in DataLayout
 		 */
 		
+		n.set(5, n.getNode(5).add(classStaticVars) ); 
+		GNode constructorNode = GNode.create("ConstructorHeader");
+		constructorNode.add( n.get(2) ); //name of constructor 
+		constructorNode.add( n.get(3) ); //append formal params
+		currentHeaderNode.getNode(2).add(constructorNode); //put the constructor on the Vtable
+		
 		
 	}
 	
@@ -504,7 +511,7 @@ public class InheritanceHandler extends Visitor {
     	 * utilizing global className, edit the parent's header
     	 * when editing is done, we have the new child's header
     	 * 
-    	 * things like changing __isA in the pointer in the constructor
+    	 * we have to change __isA in the pointer in the constructor
     	 * fixing the class caller name in each virtual method in the vtable
     	 * 
     	 * overwriting/changing the vtable pointer in the 0th child slot in our copy of the datalayout
@@ -513,6 +520,9 @@ public class InheritanceHandler extends Visitor {
     	 * 
     	 * overwriting the last child of the datalayout so that it's  __className_VT and __vTable
     	 */
+    	
+    	GNode childHeader = deepCopy(parentHeader);
+    	GNode childVirtualTable = (GNode) childHeader.getNode(0);
     }
 	
     
