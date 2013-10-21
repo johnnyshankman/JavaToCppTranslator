@@ -420,9 +420,12 @@ public class InheritanceHandler extends Visitor {
 	///////////************** CONSTRUCTOR HANDLING
 	
 	public void visitConstructorDeclaration(GNode n){
-		//this creates the constructor node in DataLayout
-		//it basically just 
-		//append static vars to constructor sig
+		/**
+		 * creates the constructor's header
+		 * then adds it to the constructor list held in DataLayout
+		 */
+		
+		
 	}
 	
 	
@@ -662,6 +665,28 @@ public class InheritanceHandler extends Visitor {
 		}
 		return name;
 	}
+    
+    
+    //creates a deep (NOT SHALLOW) copy of node n
+    GNode deepCopy(GNode n) {
+		GNode deepCopy = (GNode) new Visitor() {
+			public Object visit(GNode n) {
+				GNode deepCopy = GNode.ensureVariable(GNode.create(n));
+				while( deepCopy.size() > 0 ) {
+					deepCopy.remove(0);
+				}
+				for( Object o : n ) {
+					if( o instanceof GNode ) {
+						deepCopy.add( visit((GNode)o) );
+					}
+					else deepCopy.add( o ); //arbitrary objects don't need to be copied because they would just be replaced
+				}
+				return retVal;
+			}
+	    }.dispatch(n);
+	    
+		return deepCopy;
+    }
     
     
     
