@@ -1,4 +1,4 @@
-package xtc.oop;
+package oop;
 
 import java.io.File;
 import java.io.IOException;
