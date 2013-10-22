@@ -1,4 +1,4 @@
-package xtc.oop;
+package oop;
 
 import xtc.tree.GNode;
 import xtc.tree.Node;
@@ -29,14 +29,17 @@ public class InheritanceHandler extends Visitor {
 	GNode currentHeaderNode; //global GNode holding the current version of the header (data layout + vtable)
     GNode classStaticVars; //this class's static variables
     String className; //global reference to the name of the class we're currently dispatching through
+    Printer console;
 	
 	
 	
 	
 	///////////************** CONSTRUCTOR
 	
-	public InheritanceHandler(Node[] astArray)
+	public InheritanceHandler(Node[] astArray, Printer console)
 	{
+		this.console = console;
+		
 		initializeGivenClasses(); //this will hardcode the Object, Class, String, and Array classes to be beginning of the tree (correctly)
 							      // every other class will have to extend one of these data layouts/classes
 		for(int i = 0; i < astArray.length; i++)  //for each dependency AST, dispatch
@@ -574,16 +577,18 @@ public class InheritanceHandler extends Visitor {
     	//waht is get node(0) is the method name
     	// set the __isA into __className
     	
+    	
     	//now handle all the methods in the method pointer list the first and last method
     	for( int i = 1; i < constructor; i++ ) 
     	{ //start at one to ignore Class __isa, end at size-1 to ignore constructor
 			GNode thisVirtualMethod = (GNode)childVirtualTable.getNode(i); //get a method
-			thisVirtualMethod.getNode(2).getNode(0).getNode(0).set(0, className);
+			console.format(thisVirtualMethod).flush();
+			thisVirtualMethod.getNode(2).set(0, ("__"+className+"*"));
+			console.format(thisVirtualMethod).flush();
 			//what is getNode(2) | formal paramaters node
 			//get node(0) would be the 0th formal paramter as a String
-			//get node(0) would be the 0th child of said String paramater
-			//and then set the 0th child of THAT^^
 		}
+		
     	
     	GNode vTableConstructorPointerList = (GNode)childVirtualTable.getNode(constructor).getNode(4); //method list in constructor
     	
@@ -610,7 +615,8 @@ public class InheritanceHandler extends Visitor {
 		childDataLayout.set(2, constructorList);//clear out the constructor list
 		GNode statMethList = (GNode)childDataLayout.getNode(3);
 		for( Object o : statMethList ) { //changing the 'this' parameter types in the static data layout methods
-			((GNode)o).getNode(2).getNode(0).getNode(0).set(0, className); //ugh is that ugly or what?
+			console.format((GNode)o).flush();
+			((GNode)o).getNode(2).set(0, className); //ugh is that ugly or what?
 		}
 		
 		childDataLayout.set(4, createStaticDataFieldDeclaration( "__"+className+"_VT", "__vtable" ));
