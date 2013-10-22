@@ -582,11 +582,9 @@ public class InheritanceHandler extends Visitor {
     	for( int i = 1; i < constructor; i++ ) 
     	{ //start at one to ignore Class __isa, end at size-1 to ignore constructor
 			GNode thisVirtualMethod = (GNode)childVirtualTable.getNode(i); //get a method
-			console.format(thisVirtualMethod).flush();
+			//console.format(thisVirtualMethod).flush();
 			thisVirtualMethod.getNode(2).set(0, ("__"+className+"*"));
-			console.format(thisVirtualMethod).flush();
-			//what is getNode(2) | formal paramaters node
-			//get node(0) would be the 0th formal paramter as a String
+			//console.format(thisVirtualMethod).flush();
 		}
 		
     	
