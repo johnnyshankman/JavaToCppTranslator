@@ -16,10 +16,13 @@ import xtc.tree.Visitor;
 
 import xtc.util.Tool;
 
+import xtc.oop.GetDependencies;
+import xtc.oop.InheritanceHandler;
+
 /**
  * A translator from (a subset of) Java to (a subset of) C++.
  */
-public class Translator extends Tool {
+public class Translator extends xtc.util.Tool {
 
   /** Create a new translator. */
   public Translator() {
@@ -41,8 +44,8 @@ public class Translator extends Tool {
     runtime.
       bool("printJavaAST", "printJavaAST", false, "Print Java AST.").
       bool("printJavaCode", "printJavaCode", false, "Print Java code.").
-      bool("countMethods", "countMethods", false, "Count all Java methods.");
-      bool("translate", "translate", false, "Translate from Java to C++.");
+      bool("countMethods", "countMethods", false, "Count all Java methods.").
+      bool("translate", "translate", false, "Translate from Java to C++.").
       bool("findDependencies", "findDependencies", false, "Find all Dependencies of given Java file.");
   }
 
@@ -98,35 +101,44 @@ public class Translator extends Tool {
         }
 
       }.dispatch(node);
+    }
       
  
     if (runtime.test("translate")){
         
-        runtime.console.pln("Begin translation...\n").flush();
-        runtime.console.pln("Begin depedency finding and resolving.\n").flush();
+        runtime.console().pln("Begin translation...\n").flush();
+        runtime.console().pln("Begin depedency finding and resolving.\n").flush();
         
         GNode[] astArray = new GNode[50]; //arbitrary size
         astArray[0] = (GNode) node; //0th spot is the original java file's AST
         GetDependencies dependencyHandler = new GetDependencies();
+        try{
 		astArray = dependencyHandler.getFile(); //store the array of java ASTs
-		asttArray[0] = (GNode)node; //just to ensure we have the original java ast in slot 0 still
+        }
+        catch (IOException e){
+        	
+        }
+        catch (ParseException e){
+        	
+        }
+		astArray[0] = (GNode)node; //just to ensure we have the original java ast in slot 0 still
           
          
           
-        runtime.console.pln("Begin inheritance and data layout handling.\n").flush();
+        runtime.console().pln("Begin inheritance and data layout handling.\n").flush();
         
         InheritanceHandler layout = new InheritanceHandler(astArray);
         //done
         
         
         
-        runtime.console.pln("Begin scoping/symbol table stuff.\n").flush();
+        runtime.console().pln("Begin scoping/symbol table stuff.\n").flush();
           
-        runtime.console.pln("Begin creating a C++ AST for each Java AST.\n").flush();
+        runtime.console().pln("Begin creating a C++ AST for each Java AST.\n").flush();
           
-        runtime.console.pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
+        runtime.console().pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
           
-        runtime.console.pln("... translation is now finished.\n").flush();
+        runtime.console().pln("... translation is now finished.\n").flush();
       }
   }
 
@@ -135,8 +147,9 @@ public class Translator extends Tool {
    *
    * @param args The command line arguments.
    */
-  public static void main(String[] args) {
-    new Translator().run(args);
+  public static void main (String [] args)
+  {
+	  Translator translator = new Translator();
+	  translator.run(args);
   }
-
 }

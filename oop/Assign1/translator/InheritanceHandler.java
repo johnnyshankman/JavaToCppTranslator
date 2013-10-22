@@ -25,7 +25,7 @@ import java.util.Iterator;
 
 public class InheritanceHandler extends Visitor {
 		
-	GNode inheritanceTree; //will hold the whole thang
+	GNode classTree; //will hold the whole thang
 	GNode currentHeaderNode; //global GNode holding the current version of the header (data layout + vtable)
     GNode classStaticVars; //this class's static variables
     String className; //global reference to the name of the class we're currently dispatching through
@@ -47,8 +47,7 @@ public class InheritanceHandler extends Visitor {
 			}
 		}
 		
-		//dispatchCallExpressionVisitor(astArray); //in the other code this is where they handled how we do method calls, like which one gets called when we dispatch etc
-        //printClassTree();
+        printClassTree(); //debug! print that mofuckin tree!
 	}
 	
 	
@@ -78,7 +77,7 @@ public class InheritanceHandler extends Visitor {
 		GNode newClassNode = GNode.create("Class"); //create Class node
 		newClassNode.setProperty("name", className); //set the name
         GNode parent = null; 
-		thisClassStaticVars = GNode.create("StaticVarsList"); //this will get set in visitFieldDeclaration when we visit(n) later
+		classStaticVars = GNode.create("StaticVarsList"); //this will get set in visitFieldDeclaration when we visit(n) later
 		
 		if(n.get(3) != null) { // if this class extends another class
 			//String extendedClass = (String)(n.getNode(3).getNode(0).getNode(0).get(0)); // String name of Parent Class
@@ -114,27 +113,27 @@ public class InheritanceHandler extends Visitor {
 		GNode object = GNode.create("Class");
 		object.setProperty("name", "Object");
 		GNode classHeaderDeclaration = GNode.create("ClassHeaderDeclaration");
-		classHeaderDeclaration.add(initializeVirtualTable); //need to write these methods
-		classHeaderDeclaration.add(initializeDataLayout); //need to write these methods
+		classHeaderDeclaration.add(initializeVirtualTable()); //need to write these methods
+		classHeaderDeclaration.add(initializeDataLayout()); //need to write these methods
 		object.add(classHeaderDeclaration);
 
 		GNode string = GNode.create("Class");
 		string.setProperty("name", "String");
-		string.setProperty("parentClassNode", objectNode);
+		string.setProperty("parentClassNode", object);
 		className = "String";
-		string.add( inhertParentHeader( classHeaderDeclaration ) ); //need to write this method as well
+		string.add( inheritParentHeader( classHeaderDeclaration ) ); //need to write this method as well
 
 		GNode classNode = GNode.create("Class");
 		classNode.setProperty("name", "Class");
-		classNode.setProperty("parentClassNode", objectNode);
+		classNode.setProperty("parentClassNode", object);
 		className = "Class";
-		classNode.add( inhertParentHeader( classHeaderDeclaration ) );
+		classNode.add( inheritParentHeader( classHeaderDeclaration ) );
 
 		GNode array = GNode.create("Class");
 		array.setProperty("name", "Array");
-		array.setProperty("parentClassNode", objectNode);
+		array.setProperty("parentClassNode", object);
 		className = "Array";
-		array.add( inhertParentHeader( classHeaderDeclaration ) );
+		array.add( inheritParentHeader( classHeaderDeclaration ) );
 		
 		//actually add the nodes to our class tree after all the info
 		//has been filled in correctly
@@ -225,7 +224,7 @@ public class InheritanceHandler extends Visitor {
 				// 1  __Object
 				// 2 - params
 				newPtr.add( n.get(1) ); //0th method name
-				newPtr.add( createTypeNode( "__Object" ) ); //1st target object
+				newPtr.add( createTypeGNode( "__Object" ) ); //1st target object
 				newPtr.add( GNode.create( "FormalParameters" ) ); //2nd form parameters, but there are none so unneeded?
 				methodPtrList.add( newPtr ); //append this method to the methodptrlist
 			}
@@ -278,22 +277,7 @@ public class InheritanceHandler extends Visitor {
 	}
         
 		
-		
-        
-		//NOTES & COMMENTS 
-		
-		//add the data field to the classes' data layout declaration
-		
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 	
 	
@@ -312,18 +296,20 @@ public class InheritanceHandler extends Visitor {
 		
 		//--Method Node Editing
 		
-		String methodName = n.get(3).getString(0);
+		String methodName = n.getString(3);
 		
-		if(methodName == "main")
+		if(methodName == "main"){
 			return; //ignore main methods
+		}
+			
 		
-		betterMethodName = appendParamsToMethodName(methodName); //write this method
+		String betterMethodName = appendParamsToMethodName(n);
 		n.set(3, betterMethodName); //overwrite name with better name that includes params in the name itself
 		
 		//--Adding '__this' to PARAMATERS node as a 'FormalParameter' GNode
 		GNode thisFormParam = GNode.create("FormalParameter");
 		thisFormParam.add(null); //no modifiers to set
-		thisFormParam.add(createTypeNode(className)); //set type of parameter
+		thisFormParam.add(createTypeGNode(className)); //set type of parameter
 		thisFormParam.add(null); //nothing to set
 		thisFormParam.add("__this"); //set name of parameter
 		thisFormParam.add(null); //nothing to set
@@ -334,10 +320,12 @@ public class InheritanceHandler extends Visitor {
 		GNode vMethodSig = GNode.create("VirtualMethodDeclaration");
 		vMethodSig.add(n.get(2)); //return type
 		vMethodSig.add(betterMethodName); //method name
-		vMethodSig.add((GNode)n.get(4)); //parameters   //in the other version they make a copy and then change the structure so that
-														      //params is just a list of paramater TYPES (held at n.get(4).get(1).getNode(indexofParam).get(1)
+		GNode formalParameters = deepCopy((GNode)n.getNode(4));
+		for( int i = 0; i < formalParameters.size(); i++ ) {
+			formalParameters.set(i, formalParameters.getNode(i).getNode(1) ); // this kills the parameter name
+		}
 		
-		
+		vMethodSig.add(formalParameters);
 		//--Assessing Override Status and Adding VirtualMethodDeclaration to VTable accordingly
 		
 		int overridenMethodIndex = indexOfOverridingMethod(n, (GNode)currentHeaderNode.getNode(0) ); //give it the MethodDeclaration node and current version of VTable
@@ -352,8 +340,8 @@ public class InheritanceHandler extends Visitor {
 			int constructorSlot = currentHeaderNode.getNode(0).size()-1;
 			GNode vtConstructorPtrList = (GNode)currentHeaderNode.getNode(0).getNode(constructorSlot).getNode(4); //4 is where the pointers are held
 			GNode newPtr = GNode.create( "vtMethodPointer" ); //create a new vMethodPointer
-			newPtr.add(betterName); //append name to pointer
-			newPtr.add(createTypeNode( "__"+className)); //className is the caller class
+			newPtr.add(betterMethodName); //append name to pointer
+			newPtr.add(createTypeGNode( "__"+className)); //className is the caller class
 			newPtr.add(GNode.create( "FormalParameters")); //append params
 			vtConstructorPtrList.set(overridenMethodIndex, newPtr); //replace the inherited ptr with newPtr
 			
@@ -368,8 +356,8 @@ public class InheritanceHandler extends Visitor {
 			int constructorSlot = currentHeaderNode.getNode(0).size()-1;
 			GNode vtConstructorPtrList = (GNode)currentHeaderNode.getNode(0).getNode(constructorSlot).getNode(4); //4 is where the pointers are held
 			GNode newPtr = GNode.create( "vtMethodPointer" ); //create a new vMethodPointer
-			newPtr.add(betterName); //append name to pointer
-			newPtr.add(createTypeNode( "__"+className)); //className is the caller class
+			newPtr.add(betterMethodName); //append name to pointer
+			newPtr.add(createTypeGNode( "__"+className)); //className is the caller class
 			newPtr.add(GNode.create( "FormalParameters")); //append params
 			vtConstructorPtrList.add( newPtr ); //add new ptr at the end of ptr list
 			
@@ -428,6 +416,19 @@ public class InheritanceHandler extends Visitor {
 	
 	///////////************** GETTERS
 	
+	
+	public String getSuperclassName(String name) {
+		GNode sooper = getSuperclass(name);
+		
+		if( sooper == null) {
+			return "Object";
+		}
+		
+		return (String)sooper.getProperty("name");
+    }
+	
+	
+	
 	/*given the subclass as a string, give me the super class's GNode*/
 	public GNode getSuperclass(String sc) 
 	{
@@ -460,16 +461,78 @@ public class InheritanceHandler extends Visitor {
 	}
 	
 	
+	// Returns the name of a class
+    // @param n A Class node 
+    // @return its name
+    public String getName(GNode n) {
+		return n.getStringProperty("name");
+		
+    }
+	
+	
 	//given a classDec node give me the class name
 	public String getClassName(GNode n) 
 	{
 		return n.getStringProperty("name");
     }
-	
-	
-	// returns a Class node from the classTree using inline visitor
-    public GNode getClass(String desiredClass) {
-		//
+    
+    
+	public GNode getVTable(String cN) {
+		GNode className = getClass(cN);
+		
+		if( className == null ) {
+		    System.out.println( "getVTable: vtable not found for class " + cN );
+			return null;
+		}
+		if( className.size() == 0 || className.getNode(0) == null ) 
+			System.out.println( "getVTable: failed retrieve for cN: " + cN );
+		GNode classVT = (GNode)(className.getNode(0).getNode(0));
+		return classVT;
+    }
+
+    
+    public GNode getDataLayout(String cN) {
+		GNode className = getClass(cN);
+		
+		GNode classData = (GNode) (className.getNode(0).getNode(1));
+		
+		return classData;
+    }
+    
+    // Returns a Class node from the classTree
+    // @param sc name of the Class desired
+    // @return the appropriate class node
+    public GNode getClass(String sc) {
+		
+		// Declared final to be accessible from inner Visitor classes
+		final String s = sc;
+		
+		return (GNode)( new Visitor() {
+			
+			public GNode visitClass(GNode n) {
+			    
+				// Found the class
+				if( getName(n).equals(s) ) {
+					return n;
+				}
+			    
+				// Keep Searching
+				for( Object o : n) {
+					if (o instanceof Node) {
+						GNode returnValue = (GNode)dispatch((GNode)o);
+						if( returnValue != null ) return returnValue;
+					}
+				}
+				return null;
+			}
+			
+			public void visit(GNode n) { // override visit for GNodes
+				for( Object o : n) {
+					if (o instanceof Node) dispatch((GNode)o);
+				}
+			}
+			
+	    }.dispatch(classTree));
     }
 	
 	
@@ -522,13 +585,13 @@ public class InheritanceHandler extends Visitor {
 			//and then set the 0th child of THAT^^
 		}
     	
-    	GNode vTableConstructorPointerList = (GNode)copyVT.getNode(constructor).getNode(4); //method list in constructor
+    	GNode vTableConstructorPointerList = (GNode)childVirtualTable.getNode(constructor).getNode(4); //method list in constructor
     	
 		for( int i = 1; i < vTableConstructorPointerList.size(); i++ ) { // start at one to ignore __isa
-			GNode thisPointer = (GNode)vtConstructorPointerList.getNode(i);
+			GNode thisPointer = (GNode)vTableConstructorPointerList.getNode(i);
 			GNode caster = GNode.create("PointerCast");
-			caster.add( copyVT.getNode(i).getNode(0) ); //return value
-			caster.add( copyVT.getNode(i).getNode(2) ); //parameters
+			caster.add( childVirtualTable.getNode(i).getNode(0) ); //return value
+			caster.add( childVirtualTable.getNode(i).getNode(2) ); //parameters
 			
 			if( thisPointer.size() >= 4 ) {
 				thisPointer.set(3, caster);
@@ -539,7 +602,7 @@ public class InheritanceHandler extends Visitor {
 		}
 		
 		GNode childDataLayout = (GNode)childHeader.getNode(1);
-		childDataLayout.set(0, createSkeletonDataField( "__"+className+"_VT*", "__vptr" )); //setting the right vtable pointer name
+		childDataLayout.set(0, createDataFieldDeclaration( "__"+className+"_VT*", "__vptr" )); //setting the right vtable pointer name
 		
 		GNode constructorList = GNode.create("ConstructorHeaderList");
 		constructorList.add(0, className);
@@ -550,7 +613,7 @@ public class InheritanceHandler extends Visitor {
 			((GNode)o).getNode(2).getNode(0).getNode(0).set(0, className); //ugh is that ugly or what?
 		}
 		
-		childDataLayout.set(4, createSkeletonStaticDataField( "__"+className+"_VT", "__vtable" ));
+		childDataLayout.set(4, createStaticDataFieldDeclaration( "__"+className+"_VT", "__vtable" ));
 		return childHeader;
     }
 	
@@ -613,7 +676,7 @@ public class InheritanceHandler extends Visitor {
     
     //same as above method, just slightly modified for static method
     GNode createStaticMethodHeader(String name, String returnType, String[] parameters){
-    	GNode virtuaStaticMethod = GNode.create("StaticMethodHeader");
+    	GNode virtualStaticMethod = GNode.create("StaticMethodHeader");
     	GNode formalParameters = GNode.create("FormalParameters");
     	for(String param : parameters)
     	{
@@ -632,7 +695,7 @@ public class InheritanceHandler extends Visitor {
     	
     	fieldDeclaration.add(GNode.create("Modifiers")); //0th child add blank Modifiers 
     	
-    	typeNode = createTypeGNode(type);
+    	GNode typeNode = createTypeGNode(type);
     	fieldDeclaration.add(typeNode);  //1st child add type
     	
     	
@@ -666,8 +729,8 @@ public class InheritanceHandler extends Visitor {
     	staticFieldDeclaration.add(mod);
     	
     	
-    	typeNode = createTypeGNode(type); 
-    	fieldDeclaration.add(typeNode); 
+    	GNode typeNode = createTypeGNode(type); 
+    	staticFieldDeclaration.add(typeNode); 
     	
     	
 		GNode declr = GNode.create("Declarator");
@@ -679,9 +742,9 @@ public class InheritanceHandler extends Visitor {
 		declrs.add( declr ); //append declarators to this node
 		
 		
-		fieldDeclaration.add( declrs ); //add decs to fielddec node
+		staticFieldDeclaration.add( declrs ); //add decs to fielddec node
 		
-		return fieldDeclaration;
+		return staticFieldDeclaration;
     }
     
     
@@ -734,7 +797,7 @@ public class InheritanceHandler extends Visitor {
 					}
 					else deepCopy.add( o ); //arbitrary objects don't need to be copied because they would just be replaced
 				}
-				return retVal;
+				return deepCopy;
 			}
 	    }.dispatch(n);
 	    
@@ -776,4 +839,5 @@ public class InheritanceHandler extends Visitor {
 		}.dispatch(classTree);
 		System.out.println();
     }
+	
 }
