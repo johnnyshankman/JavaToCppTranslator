@@ -1,4 +1,4 @@
-package xtc.oop;
+package oop;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +16,8 @@ import xtc.tree.Visitor;
 
 import xtc.util.Tool;
 
-import xtc.oop.GetDependencies;
-import xtc.oop.InheritanceHandler;
+import oop.GetDependencies;
+import oop.InheritanceHandler;
 
 /**
  * A translator from (a subset of) Java to (a subset of) C++.
@@ -127,7 +127,7 @@ public class Translator extends xtc.util.Tool {
           
         runtime.console().pln("Begin inheritance and data layout handling.\n").flush();
         
-        InheritanceHandler layout = new InheritanceHandler(astArray);
+        InheritanceHandler layout = new InheritanceHandler(astArray, runtime.console());
         //done
         
         
