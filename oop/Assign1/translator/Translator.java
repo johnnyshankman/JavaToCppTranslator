@@ -21,6 +21,7 @@ import xtc.util.Tool;
 import oop.GetDependencies;
 import oop.InheritanceHandler;
 import oop.ASTConverter;
+import oop.CPPrinter;
 
 /**
  * A translator from (a subset of) Java to (a subset of) C++.
@@ -86,7 +87,7 @@ public class Translator extends xtc.util.Tool {
     }
 
     if (runtime.test("printJavaCode")) {
-      new JavaPrinter(runtime.console()).dispatch(node);
+      new CPrinter(runtime.console()).dispatch(node);
       runtime.console().flush();
     }
 
@@ -152,6 +153,8 @@ public class Translator extends xtc.util.Tool {
         cppast.translateJavaToCPP();
         GNode translated = cppast.getTranslatedTree();
         runtime.console().format(translated).pln().flush();
+        new CPPrinter(runtime.console()).dispatch(translated);
+        runtime.console().flush();
           
         runtime.console().pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
           

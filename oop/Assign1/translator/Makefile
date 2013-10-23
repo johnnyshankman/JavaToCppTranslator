@@ -49,7 +49,8 @@ SOURCE = \
        GetDependencies.java \
        InheritanceHandler.java \
        Translator.java 	\
-       ASTConverter.java
+       ASTConverter.java \
+       CPPrinter.java
 
 JNI_SOURCE =
 

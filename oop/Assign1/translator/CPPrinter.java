@@ -16,7 +16,7 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
  * USA.
  */
-package xtc.lang;
+package oop;
 
 import java.util.Iterator;
 
@@ -40,7 +40,7 @@ import xtc.tree.Visitor;
  * @author Robert Grimm
  * @version $Revision: 1.75 $
  */
-public class CPrinter extends Visitor {
+public class CPPrinter extends Visitor {
 
   /**
    * The flag for printing additional parentheses to avoid gcc
@@ -134,7 +134,7 @@ public class CPrinter extends Visitor {
    *
    * @param printer The printer.
    */
-  public CPrinter(Printer printer) {
+  public CPPrinter(Printer printer) {
     this(printer, false, false);
   }
 
@@ -147,7 +147,7 @@ public class CPrinter extends Visitor {
    * @param gnuify The flag for whether to use GNU code formatting
    *   conventions.
    */
-  public CPrinter(Printer printer, boolean lineUp, boolean gnuify) {
+  public CPPrinter(Printer printer, boolean lineUp, boolean gnuify) {
     this.printer = printer;
     this.lineUp  = lineUp;
     this.gnuify  = gnuify;
