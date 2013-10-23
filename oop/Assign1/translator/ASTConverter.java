@@ -22,13 +22,19 @@ public class ASTConverter extends Visitor {
 
 
 
+        
+  String thisClassName;
+        GNode thisClassVTableStructDeclList;
+        GNode thisClassImplementation;
+        
 	
 	
 	GNode originalTree;
   GNode classHierarchy;
   GNode translatedTree;
+  GNode thisExpressionStatement;
   
-  GNode thisClassVTableStructDeclList;
+ 
     
   public ASTConverter(GNode layout, GNode javaAST) { 
     this.translatedTree = GNode.create("TranslationUnit");
@@ -42,8 +48,11 @@ public class ASTConverter extends Visitor {
     return (GNode)GNode.create( "PrimaryIdentifier" ).add(contents);
   }
   
-  GNode buildHeaderForClass(String className) {
-    GNode objectTree = GNode.create("HeaderDeclaration"); 
+
+
+GNode buildHeaderForClass() {
+        String className = thisClassName;
+       GNode objectTree = GNode.create("HeaderDeclaration"); 
     {
       GNode typedefDecl = GNode.create("Declaration"); 
       {
@@ -109,7 +118,11 @@ public class ASTConverter extends Visitor {
       objectTree.add(2, vtableLayout);
     }
     return objectTree;
-  }
+    }
+
+
+
+ 
   
   public void translateJavaToCPP() { dispatch(originalTree); 
     System.out.println("Dispatched.");}
@@ -122,16 +135,88 @@ public class ASTConverter extends Visitor {
   }
   
   public void visitClassDeclaration(GNode n) {
-    translatedTree.add(buildHeaderForClass( n.get(1).toString() ));
-    visit(n);
-  }
-  
-  public void visitMethodDeclaration(GNode n) {
-    thisClassVTableStructDeclList.add(0, createPrimaryIdentifier( (String)n.get(3) ));
-    visit(n);
-  }
+        thisClassName = n.get(1).toString();
+        translatedTree.add(buildHeaderForClass());
+        thisClassImplementation = buildImplementationForClass();
+        translatedTree.add(thisClassImplementation);
+        visit(n);
+    }
+    
+    public void visitMethodDeclaration(GNode n) {
+        addToVTable(n);
+        addMethodImplementation(n);
+        visit(n);
+    }
+    
+    public void visitExpressionStatement(GNode n) {
+        thisExpressionStatement = n;
+        visit(n);
+    }
+    
+    public void visitCallExpression(GNode n) {
+        if( n.size() >= 3 && "println".equals((String)n.get(2)) ) {
+            GNode strOut = GNode.create("StreamOutputList");
+            strOut.add(0, (GNode)GNode.create( "PrimaryIdentifier" ).add(0, "std::cout") );
+            strOut.add(1, n.getNode(3).get(0) ); //FIXME: only adds the first argument
+            strOut.add(2, (GNode)GNode.create( "PrimaryIdentifier" ).add(0, "std::endl") );
+            /*
+              n.set(2, "cout");
+              GNode strLiteral = (GNode)GNode.create( kPrimID ).add(0, "std");
+              n.set(0, strLiteral);
+            */
+            thisExpressionStatement.set(0, strOut);
+        }
+        else if( n.size() >= 3 && "print".equals((String)n.get(2)) ) {
+            GNode strOut = GNode.create("StreamOutputList");
+            strOut.add(0, (GNode)GNode.create( "PrimaryIdentifier" ).add(0, "std::cout") );
+            strOut.add(1, n.getNode(3).get(0) ); //FIXME: only adds the first argument
+            thisExpressionStatement.set(0, strOut);
+        }
+    }
+
+    public GNode buildImplementationForClass() {
+        GNode mainTree = GNode.create("ImplementationDeclaration");
+        mainTree.setProperty("className", thisClassName);
+        return mainTree;
+    }
+    
+    public void addToVTable(GNode n) {
+        thisClassVTableStructDeclList.add(0, createPrimaryIdentifier( "__" + thisClassName + "::" + (String)n.get(3) ));
+    }
+    
+    public void addMethodImplementation(GNode n) {
+        thisClassImplementation.add(functionDefForMethDecl(n));
+        visit(n);
+    }
 	
+    GNode functionDefForMethDecl(GNode n) {
+        //Java:MethodDeclaration() -> CPP:FunctionDefinition()
+        // Function name:
+        // Return type:
+        // Parameters: 
+        GNode fncDef = GNode.create("FunctionDefinition");
+        {
+            fncDef.add(0, null);
+            GNode declSpef = GNode.create("DeclarationSpecifiers");
+            {
+                declSpef.add( n.get(2) ); //add return type (java type)
+            }
+            fncDef.add(1, declSpef);
+            GNode fncDeclarator = GNode.create("FunctionDeclarator");
+            {
+                GNode simpDecl = (GNode)GNode.create("SimpleDeclarator").add(n.get(3)); //method name
+                fncDeclarator.add(0, simpDecl);
+                fncDeclarator.add(1, null);
+            }
+            fncDef.add(2, fncDeclarator);
+            fncDef.add(3, null);
+            fncDef.add(4, n.get(7));  
+            // ^ NOTE: we are adding a java code block instead of a C compound statement
+        }
+        return fncDef;
+    }
 	
+
 	
   
 }
