@@ -48,7 +48,8 @@ PACKAGE_LOC = oop
 SOURCE = \
        GetDependencies.java \
        InheritanceHandler.java \
-       Translator.java 	
+       Translator.java 	\
+       ASTConverter.java
 
 JNI_SOURCE =
 

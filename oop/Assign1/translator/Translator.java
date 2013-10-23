@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.Reader;
 
 import xtc.lang.JavaFiveParser;
+import xtc.lang.CParser;
 import xtc.lang.JavaPrinter;
+import xtc.lang.CPrinter;
 
 import xtc.parser.ParseException;
 import xtc.parser.Result;
@@ -18,6 +20,7 @@ import xtc.util.Tool;
 
 import oop.GetDependencies;
 import oop.InheritanceHandler;
+import oop.ASTConverter;
 
 /**
  * A translator from (a subset of) Java to (a subset of) C++.
@@ -67,6 +70,13 @@ public class Translator extends xtc.util.Tool {
     JavaFiveParser parser =
       new JavaFiveParser(in, file.toString(), (int)file.length());
     Result result = parser.pCompilationUnit(0);
+    return (Node)parser.value(result);
+  }
+
+  public Node Cparse(Reader in, File file) throws IOException, ParseException {
+    CParser parser =
+      new CParser(in, file.toString(), (int)file.length());
+    Result result = parser.pTranslationUnit(0);
     return (Node)parser.value(result);
   }
 
@@ -130,16 +140,28 @@ public class Translator extends xtc.util.Tool {
         InheritanceHandler layout = new InheritanceHandler(astArray, runtime.console());
         //done
         
+
+
         
         
         runtime.console().pln("Begin scoping/symbol table stuff.\n").flush();
           
         runtime.console().pln("Begin creating a C++ AST for each Java AST.\n").flush();
+
+        ASTConverter cppast = new ASTConverter(layout.getFirstNode(), astArray[0]);
+        cppast.translateJavaToCPP();
+        GNode translated = cppast.getTranslatedTree();
+        runtime.console().format(translated).pln().flush();
           
         runtime.console().pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
           
         runtime.console().pln("... translation is now finished.\n").flush();
+
+       
+      
       }
+
+
   }
 
   /**
