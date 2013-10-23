@@ -155,6 +155,7 @@ public class Translator extends xtc.util.Tool {
         runtime.console().format(translated).pln().flush();
         new CPPrinter(runtime.console()).dispatch(translated);
         runtime.console().flush();
+        
           
         runtime.console().pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
           

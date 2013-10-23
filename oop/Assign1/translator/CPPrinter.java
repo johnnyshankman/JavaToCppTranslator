@@ -240,6 +240,7 @@ public class CPPrinter extends Visitor {
    * @return The flag for whether the current statement is nested.
    */
   protected boolean startStatement(int kind, Node node) {
+    System.out.println("start");
     if (isIfElse && ((STMT_IF == kind) || (STMT_IF_ELSE == kind))) {
       isNested = false;
     } else {
@@ -367,8 +368,16 @@ public class CPPrinter extends Visitor {
     precedence = prec;
   }
 
+int ptd = 0;
+
+
   /** Visit the specified translation unit node. */
   public void visitTranslationUnit(GNode n) {
+    if ( ptd == 0) {
+      System.out.println();
+      System.out.println("int main() {");
+      ptd = 1;
+    }
     // Reset the state.
     isDeclaration  = false;
     isLongDecl     = false;
@@ -389,6 +398,7 @@ public class CPPrinter extends Visitor {
 
   /** Visit the specified function definition node. */
   public void visitFunctionDefinition(GNode n) {
+    //System.out.println("FUnctionDefinition");
     if (lineUp) {
       if (isOpenLine) printer.pln();
       printer.lineUp(n);
@@ -410,7 +420,7 @@ public class CPPrinter extends Visitor {
       if (null != n.get(0)) {
         printer.p("__extension__ ");
       }
-      printer.p(n.getNode(1));
+      //System.out.println(n.getNode(1));
     }
 
     // Print function name and parameters.
@@ -1371,7 +1381,11 @@ public class CPPrinter extends Visitor {
   /** Visit the specified expression statement node. */
   public void visitExpressionStatement(GNode n) {
     boolean nested = startStatement(STMT_ANY, n);
-    printer.indent().p(n.getNode(0)).pln(';');
+    System.out.print((n.getNode(0).getNode(0).getNode(0).get(0) + "<<"));
+    System.out.println((n.getNode(0).getNode(0).getNode(1).get(0)) + ";");
+    System.out.println((n.getNode(0).getNode(0).getNode(2).get(0)) + ";");
+    System.out.println();
+    //System.out.println(n.getNode(0));
     endStatement(nested);
   }
 
@@ -1670,6 +1684,8 @@ public class CPPrinter extends Visitor {
     endExpression(prec1);
   }
 
+  
+
   /** Visit the specified multiplicative expression node. */
   public void visitMultiplicativeExpression(GNode n) {
     int prec1 = startExpression(130);
@@ -1882,8 +1898,10 @@ public class CPPrinter extends Visitor {
 
   /** Visit the specified primary identifier node. */
   public void visitPrimaryIdentifier(GNode n) {
+
     int prec = startExpression(160);
-    printer.p(n.getString(0));
+    //System.out.println(n.getNode(0).get(0));
+    //printer.p(n.getString(0));
     endExpression(prec);
   }
 
@@ -2088,6 +2106,40 @@ public class CPPrinter extends Visitor {
     if (lineUp) printer.lineUp(ident);
 
     printer.p("#ident \"").p(ident.ident).pln('"').p(ident.getNode());
+  }
+
+
+  public void visitHeaderDeclaration(GNode n) {
+
+  }
+
+  public void visitVoidType(GNode n) {
+    //System.out.println("void");
+
+  }
+
+  public void visitFieldDeclaration(GNode n) {
+    System.out.println("visit field");
+    System.out.println(n);
+
+  }
+
+  public void visitStreamOutputList(GNode n) {
+    visitPrimaryIdentifier(n);
+
+  }
+
+  public void visitBlock(GNode n){
+    //visitChildren(n, 0, n.size(), "");
+    visitExpressionStatement(n);
+    visitFieldDeclaration(n);
+    System.out.println(printer);
+
+  }
+
+  public void visitImplementationDeclaration(GNode n) {
+
+    visitTranslationUnit(n);
   }
 
 }
