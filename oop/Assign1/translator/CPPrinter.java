@@ -2099,8 +2099,17 @@ int ptd = 0;
 
 
   public void visitHeaderDeclaration(GNode n) {
-	System.out.println("Visiting Header Declaration\n");
+	System.out.println("Visiting Header Declaration");
 	
+	//for loop ittereates through all children of FieldDec        
+    for(int i = 0; i < n.size(); i++) {
+    	
+    	GNode HeaderChildren = (GNode)n.getNode(i);
+    	
+    	//System.out.println((n.getNode(0).getNode(i)));
+    	
+    	System.out.println(HeaderChildren);
+    }
   }
 
   public void visitVoidType(GNode n) {
@@ -2109,11 +2118,16 @@ int ptd = 0;
   }
 
   public void visitFieldDeclaration(GNode n) {
-	System.out.println("Visiting Field Declaration\n");
-    //System.out.println(n);
-    
+	System.out.println("\nVisiting Field Declaration");
+	
+    //for loop ittereates through all children of FieldDec        
     for(int i = 0; i < n.size(); i++) {
-    	System.out.println(i);
+    	
+    	GNode FieldDecVars = (GNode)n.getNode(i);
+    	
+    	//System.out.println((n.getNode(0).getNode(i)));
+    	
+    	System.out.println(FieldDecVars);
     }
 
   }
@@ -2124,10 +2138,23 @@ int ptd = 0;
   }
 
   public void visitBlock(GNode n){
-    //visitChildren(n, 0, n.size(), "");
-    visitExpressionStatement(n);
-    visitFieldDeclaration(n);
-    System.out.println(printer);
+	System.out.println("\nVisiting Block");
+        
+    //for loop ittereates through all children of Block    
+    for(int i = 0; i < n.size(); i++) {
+    	
+    	GNode BlockVars = (GNode)n.getNode(i);
+    	
+    	//System.out.println((n.getNode(0).getNode(i)));
+    	
+    	System.out.println(BlockVars);
+    }
+    
+    GNode ExpStatement = (GNode)n.getNode(0);
+    visitExpressionStatement(ExpStatement);
+
+    GNode FieldDec = (GNode)n.getNode(1);
+    visitFieldDeclaration(FieldDec);
     
      /*
     boolean nested = startStatement(STMT_ANY, n);
@@ -2151,47 +2178,17 @@ int ptd = 0;
   /** Visit the specified expression statement node. */
 
   public void visitExpressionStatement(GNode n) {
-  
-
-    
-    /*
-    boolean nested = startStatement(STMT_ANY, n);
-    System.out.print((n.getNode(0).getNode(0).getNode(0).get(0) + "<<"));
-    System.out.println((n.getNode(0).getNode(0).getNode(1).get(0)) + ";");
-    System.out.println((n.getNode(0).getNode(0).getNode(2).get(0)) + ";");
-    System.out.println();
-    //System.out.println(n.getNode(0));
-    endStatement(nested);
-        
-    System.out.println((n.getNode(1).getNode(1).getNode(0).get(0) ));
-
-
-    System.out.println((n.getNode(2).getNode(0).getNode(0).get(0)));
-    
-    */
-    
-    /*
-    // If primary identifier other than std:; must check not null
-                for( Object o : n) {
-                        if (o instanceof Node) {
-                                new Visitor() {
-                                        public void visit(GNode n) {
-                                                for( Object o : n) {
-                                                        if (o instanceof Node) dispatch((GNode)o);
-                                                }
-                                        }
-                                        
-                                }.dispatch(GNode.cast(o));
-                                
-                        } // end if
-                } // end for loop
-                
-                // Continue like normal
-                //boolean nested = startStatement(STMT_ANY, n);
-                printer.indent().p(n.getNode(0)).pln(';');
-                endStatement(nested);
-                
-        */
+  	System.out.println("\nVisiting Expression Statement");
+  	
+    //for loop ittereates through all children of Expression    
+  	for(int i = 0; i < n.size(); i++) {
+    	
+    	GNode FieldExpVars = (GNode)n.getNode(i).getNode(0);
+    	
+    	//System.out.println((n.getNode(0).getNode(i)));
+    	
+    	System.out.println(FieldExpVars);
+    }
   }
 	
 
