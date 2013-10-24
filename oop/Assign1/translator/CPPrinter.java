@@ -375,6 +375,8 @@ int ptd = 0;
   public void visitTranslationUnit(GNode n) {
     if ( ptd == 0) {
       System.out.println("#include <iostream>");
+      System.out.println("// #include \"java_lang.h\"");
+	  System.out.println("using namespace java::lang;");
       System.out.println("int main() {");
       ptd = 1;
     }
@@ -775,8 +777,10 @@ int ptd = 0;
   public void visitFunctionDeclarator(GNode n) {
     if (n.getGeneric(0).hasName("SimpleDeclarator")) {
       printer.p(n.getNode(0));
+      System.out.println(n.getNode(0).getString(0) + "()");
     } else {
       printer.p('(').p(n.getNode(0)).p(')');
+      System.out.println("(" + n.getNode(0) + ")");
     }
     printer.p('(').p(n.getNode(1)).p(')');
   }
@@ -2086,16 +2090,16 @@ int ptd = 0;
 
   public void visitHeaderDeclaration(GNode n) {
 	System.out.println("Visiting Header Declaration");
-	
+	GNode HeaderChildren = (GNode)n.getNode(0);
 	//for loop ittereates through all children of FieldDec        
     for(int i = 0; i < n.size(); i++) {
     	
-    	GNode HeaderChildren = (GNode)n.getNode(i);
+    	HeaderChildren = (GNode)n.getNode(i);
     	
     	//System.out.println((n.getNode(0).getNode(i)));
-    	
     	System.out.println(HeaderChildren);
-    }
+    } 
+    
   }
 
   public void visitVoidType(GNode n) {
@@ -2204,6 +2208,141 @@ int ptd = 0;
 		if (o instanceof Node) dispatch((GNode)o);
 	}
   }
+  
+  public void visitNewClassExpression(GNode n) {
+		System.out.println("*****Visiting New Class Expression*****");
+		
+		for(Object o : n ) {
+			if( o instanceof GNode ) {
+				if(GNode.cast(o).hasName("QualifiedIdentifier")) 
+					System.out.print("new __" + ((GNode)o).get(0).toString() + "(" );
+				else if(GNode.cast(o).hasName("Arguments")) 
+					System.out.print( ( (GNode)o ).get(0).toString());
+			}
+		}
+		System.out.println(")");
+  }
+  
+  public void visitBasicCastExpression(GNode n) {
+	  	System.out.println("");
+		System.out.println("**VISITING BASIC CAST**");
+		final int prec = startExpression(140);
+		//printer.p('(').p(n.getNode(0));
+		System.out.println("(" + n.getNode(0).toString());
+		if(null != n.get(1)) {
+			printer.p(n.getNode(1));
+			System.out.println("" + n.getNode(1).toString());
+		}
+		//printer.p(')').p(n.getNode(2));  
+		System.out.println(")" + n.getNode(2).toString());
+		
+		endExpression(prec);
+		
+  }
+  
+  /** Visit the specified call expression. */
+  public void visitCallExpression(GNode n) {
+	    
+		// TODO: Modify AST to include CallingClass node
+		final int prec = startExpression(160);
+	    
+		// Callling instance
+		if (null == n.getNode(0)) 
+			System.out.print("__this ");	    
+		else if (n.getNode(0).hasName("ThisExpression")) 
+			System.out.print("__this ");
+		else System.out.println("" + n.getNode(0));
+		
+		// method name
+		printer.p("->__vptr->").p(n.getString(2));
+		
+		// arguments
+		// FIXME: Know when to pass self, etc. as arguments
+		if(n.getNode(3).size() > 0) System.out.println("" + n.getNode(3));
+		else if ("toString".equals(n.getString(2)) ||
+				 "getClass".equals(n.getString(2))) 
+			System.out.println("(" + n.getNode(0) + ")");
+		else System.out.println("()");
+		
+		endExpression(prec);
+  }
+  
+  public void visitTypeParameter(GNode n) {
+		printer.p(n.getString(0));
+		if (null != n.get(1))
+		System.out.println(" extends " + n.getNode(1));
+  }
+  
+  public void visitThisExpression(GNode n) {
+		
+		// TODO: How to get calling class?
+		final int prec = startExpression(160);
+		// WTF would be there?
+		if (null != n.get(0)) 
+			System.out.print("" + n.getNode(0) + ".");
+		System.out.print("__this");
+		endExpression(prec);
+  }
+  
+  public void visitSelectionExpression(GNode n) {
+		// Grim prints rt:: and std:: elsewhere? Can't find it in CPPPrinter
+		// FUCK - where is rt? Needs translate to __rt
+		// If it's a method, neeed ->__vptr
+		// If it's a data field, only instance->field
+		
+		// This is a data field, don't need to access __vptr
+		final int prec = startExpression(160);
+		System.out.println("" + n.getNode(0) + "->" + n.getString(1));
+		
+		endExpression(prec);
+  }
+  
+  /** Visit the specified expression. */
+  public void visitExpression(GNode n) {
+		
+		if(n.getNode(2).hasName("PrimaryIdentifier")) {
+			
+			for( Object o : n) {
+				if (o instanceof Node) {
+					new Visitor() {
+						public void visitSubscriptExpression(GNode n) {
+							printer.indent().p("// __rt::checkStore(");
+							printer.p(n.getNode(0)).p(",");
+							printer.p(n.getNode(1)).p(");").pln();
+							
+						}
+						
+						public void visit(GNode n) {
+							for( Object o : n) {
+								if (o instanceof Node) dispatch((GNode)o);
+							}
+						}
+						
+					}.dispatch(GNode.cast(o));
+					
+				} // end if
+			} // end for loop
+			// FIXME: Is this in the right place?
+			//		     printer.p(n.getNode(2)).p(");").pln();
+		}
+		
+		final int prec1 = startExpression(10);
+		final int prec2 = enterContext();
+		printer.p(n.getNode(0));
+		exitContext(prec2);
+		
+		printer.p(' ').p(n.getString(1)).p(' ').p(n.getNode(2));
+		System.out.println(" " + n.getString(1) + " " + n.getNode(2));
+		endExpression(prec1);
+  }
+  
+  
+  public void visitExtension(GNode n) {
+		// TODO: 
+		for(Object o : n ) if( o instanceof GNode ) System.out.println((GNode)o);
+  }
+  
+ 
   
   public void visitImplementation(GNode n) {
     visitTranslationUnit(n);

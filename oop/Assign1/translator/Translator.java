@@ -151,7 +151,7 @@ public class Translator extends xtc.util.Tool {
 
         ASTConverter cppast = new ASTConverter(layout.getFirstNode(), astArray[0]);
         cppast.translateJavaToCPP();
-        GNode translated = cppast.getCppTree();
+        GNode translated = cppast.getTranslatedTree();
         runtime.console().format(translated).pln().flush();
         new CPPrinter(runtime.console()).dispatch(translated);
         runtime.console().flush();
