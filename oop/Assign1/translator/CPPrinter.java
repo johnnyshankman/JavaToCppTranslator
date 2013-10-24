@@ -374,7 +374,7 @@ int ptd = 0;
   /** Visit the specified translation unit node. */
   public void visitTranslationUnit(GNode n) {
     if ( ptd == 0) {
-      System.out.println();
+      System.out.println("#include <iostream>");
       System.out.println("int main() {");
       ptd = 1;
     }
@@ -1378,17 +1378,6 @@ int ptd = 0;
     endStatement(nested);
   }
 
-  /** Visit the specified expression statement node. */
-  public void visitExpressionStatement(GNode n) {
-    boolean nested = startStatement(STMT_ANY, n);
-    System.out.print((n.getNode(0).getNode(0).getNode(0).get(0) + "<<"));
-    System.out.println((n.getNode(0).getNode(0).getNode(1).get(0)) + ";");
-    System.out.println((n.getNode(0).getNode(0).getNode(2).get(0)) + ";");
-    System.out.println();
-    //System.out.println(n.getNode(0));
-    endStatement(nested);
-  }
-
   /** Visit the specified empty statement node. */
   public void visitEmptyStatement(GNode n) {
     boolean nested = startStatement(STMT_ANY, n);
@@ -2110,17 +2099,22 @@ int ptd = 0;
 
 
   public void visitHeaderDeclaration(GNode n) {
-
+	System.out.println("Visiting Header Declaration\n");
+	
   }
 
   public void visitVoidType(GNode n) {
-    //System.out.println("void");
+	System.out.println("Visiting Void Type\n");
 
   }
 
   public void visitFieldDeclaration(GNode n) {
-    System.out.println("visit field");
-    System.out.println(n);
+	System.out.println("Visiting Field Declaration\n");
+    //System.out.println(n);
+    
+    for(int i = 0; i < n.size(); i++) {
+    	System.out.println(i);
+    }
 
   }
 
@@ -2134,8 +2128,72 @@ int ptd = 0;
     visitExpressionStatement(n);
     visitFieldDeclaration(n);
     System.out.println(printer);
+    
+     /*
+    boolean nested = startStatement(STMT_ANY, n);
+    System.out.print((n.getNode(0).getNode(0).getNode(0).get(0) + "<<"));
+    System.out.println((n.getNode(0).getNode(0).getNode(1).get(0)) + ";");
+    System.out.println((n.getNode(0).getNode(0).getNode(2).get(0)) + ";");
+    System.out.println();
+    //System.out.println(n.getNode(0));
+    endStatement(nested);
+        
+    System.out.println((n.getNode(1).getNode(1).getNode(0).get(0) ));
+
+
+    System.out.println((n.getNode(2).getNode(0).getNode(0).get(0)));
+    
+    */
+    
 
   }
+
+  /** Visit the specified expression statement node. */
+
+  public void visitExpressionStatement(GNode n) {
+  
+
+    
+    /*
+    boolean nested = startStatement(STMT_ANY, n);
+    System.out.print((n.getNode(0).getNode(0).getNode(0).get(0) + "<<"));
+    System.out.println((n.getNode(0).getNode(0).getNode(1).get(0)) + ";");
+    System.out.println((n.getNode(0).getNode(0).getNode(2).get(0)) + ";");
+    System.out.println();
+    //System.out.println(n.getNode(0));
+    endStatement(nested);
+        
+    System.out.println((n.getNode(1).getNode(1).getNode(0).get(0) ));
+
+
+    System.out.println((n.getNode(2).getNode(0).getNode(0).get(0)));
+    
+    */
+    
+    /*
+    // If primary identifier other than std:; must check not null
+                for( Object o : n) {
+                        if (o instanceof Node) {
+                                new Visitor() {
+                                        public void visit(GNode n) {
+                                                for( Object o : n) {
+                                                        if (o instanceof Node) dispatch((GNode)o);
+                                                }
+                                        }
+                                        
+                                }.dispatch(GNode.cast(o));
+                                
+                        } // end if
+                } // end for loop
+                
+                // Continue like normal
+                //boolean nested = startStatement(STMT_ANY, n);
+                printer.indent().p(n.getNode(0)).pln(';');
+                endStatement(nested);
+                
+        */
+  }
+	
 
   public void visitImplementationDeclaration(GNode n) {
 
