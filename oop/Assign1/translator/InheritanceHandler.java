@@ -396,9 +396,9 @@ public class InheritanceHandler extends Visitor {
 		 * then adds it to the constructor list held in DataLayout
 		 */
 		
-		//n.set(5, n.getNode(5).add(classStaticVars) ); 
+		//n.set(5, n.getNode(5).add(classStaticVars) );
 		GNode constructorNode = GNode.create("ConstructorHeader");
-		constructorNode.add( n.get(2) ); //name of constructor 
+		constructorNode.add( n.get(2) ); //name of constructor
 		constructorNode.add( n.get(3) ); //append formal params
 		currentHeaderNode.add(constructorNode);//put the constructor on the Vtable
 		
