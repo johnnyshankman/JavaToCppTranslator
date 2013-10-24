@@ -1885,15 +1885,6 @@ int ptd = 0;
     endExpression(prec);
   }
 
-  /** Visit the specified primary identifier node. */
-  public void visitPrimaryIdentifier(GNode n) {
-
-    int prec = startExpression(160);
-    //System.out.println(n.getNode(0).get(0));
-    //printer.p(n.getString(0));
-    endExpression(prec);
-  }
-
   /** Visit the specified statement as exprression node. */
   public void visitStatementAsExpression(GNode n) {
     int     prec       = enterContext(PREC_BASE);
@@ -2132,11 +2123,6 @@ int ptd = 0;
 
   }
 
-  public void visitStreamOutputList(GNode n) {
-    visitPrimaryIdentifier(n);
-
-  }
-
   public void visitBlock(GNode n){
 	System.out.println("\nVisiting Block");
         
@@ -2146,15 +2132,22 @@ int ptd = 0;
     	GNode BlockVars = (GNode)n.getNode(i);
     	
     	//System.out.println((n.getNode(0).getNode(i)));
-    	
+    	visit(BlockVars);
     	System.out.println(BlockVars);
     }
     
+    //loop through all children of GNode N from Block
+    for( Object o : n) {
+		if (o instanceof Node) dispatch((GNode)o);
+	}
+	
+    /*
     GNode ExpStatement = (GNode)n.getNode(0);
     visitExpressionStatement(ExpStatement);
 
     GNode FieldDec = (GNode)n.getNode(1);
     visitFieldDeclaration(FieldDec);
+    */
     
      /*
     boolean nested = startStatement(STMT_ANY, n);
@@ -2189,12 +2182,45 @@ int ptd = 0;
     	
     	System.out.println(FieldExpVars);
     }
+    
+    //loop through all children of GNode N from Expression Statement -- prob 
+    for( Object o : n) {
+		if (o instanceof Node) dispatch((GNode)o);
+	}
   }
-	
+  
+  public void visitStreamOutputList(GNode n) {
+    System.out.println("\nVisit Primary Identifier\n");
+    visitPrimaryIdentifier(n);
+  }
 
+  
+    /** Visit the specified primary identifier node. */
+  public void visitPrimaryIdentifier(GNode n) {
+    for( Object o : n) {
+					if (o instanceof Node) dispatch((GNode)o);
+	}
+	
+	System.out.println(n.getNode(0));
+	
+    //for loop ittereates through all children of Primary   
+    /*
+  	for(int i = 0; i < n.size(); i++) {
+    	    	
+    	System.out.println(n.getNode(i));
+    }
+    */
+  }
+  
   public void visitImplementationDeclaration(GNode n) {
 
     visitTranslationUnit(n);
   }
+  
+  public void visit(GNode n) { // override visit for GNodes
+				for( Object o : n) {
+					if (o instanceof Node) dispatch((GNode)o);
+				}
+			}
 
 }
