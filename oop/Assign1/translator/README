@@ -1,0 +1,18 @@
+******* THE TEAM *******
+
+Put all java files in xtc/src/oop
+
+While in the src/oop directory
+
+Run 'make' command to compile everything.
+
+To run the translation program on our test file use the following command:
+
+~$ java oop.Translate -translate Test.java
+
+
+
+The output is mostly debugging from CppPrinter to make sure our C++ AST is working correctly at the moment.
+
+We're working on getting the pretty printing together.
+
