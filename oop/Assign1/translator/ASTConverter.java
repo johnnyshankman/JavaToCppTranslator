@@ -15,36 +15,26 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Iterator;
 
-
-
 public class ASTConverter extends Visitor {
 		
-
-
-
-        
-  String thisClassName;
-        GNode thisClassVTableStructDeclList;
-        GNode thisClassImplementation;
-        
-	
-	
-	GNode originalTree;
-  GNode classHierarchy;
-  GNode translatedTree;
-  GNode thisExpressionStatement;
-  
+  	String currentClassName;
+        GNode currentClassVTableStructDeclList;
+        GNode currentClassImplementation;
+	GNode javaTree;
+	GNode classHierarchy;
+	GNode translatedTree;
+	GNode currentExpressionStatement;
+	  
  
-    // pass Layout>??? 
-  public ASTConverter(GNode layout, GNode javaAST) { 
+	//Constructor
+  public ASTConverter(GNode inheritanceTree, GNode javaAST) { 
     this.translatedTree = GNode.create("TranslationUnit");
-    this.originalTree = javaAST;
-    this.classHierarchy = layout;
-        
+    this.javaTree = javaAST;
+    this.classHierarchy = inheritanceTree;   
   } 
 	
 // call to begin translation
-  public void translateJavaToCPP() { dispatch(originalTree); 
+  public void translateJavaToCPP() { dispatch(javaTree); 
     System.out.println("Dispatched.");}
     
  // Vist ALl nodes starting right here/ 
@@ -64,7 +54,7 @@ public class ASTConverter extends Visitor {
 // 2 -> 
 // creates a skeleton class structure for C++  tree and returns the tree, 
 GNode buildHeaderForClass() {
-        String className = thisClassName;
+        String className = currentClassName;
        GNode objectTree = GNode.create("HeaderDeclaration"); 
     {
       GNode Decl = GNode.create("Declaration"); 
@@ -125,11 +115,11 @@ GNode buildHeaderForClass() {
             vtStructDef.add(0, null);
             vtStructDef.add(1, "__" + className + "_VT");
 	// SETS IT TO GLOBAL VARIABLE, KEEPS TRACK OF WHICH VTABLE 
-            thisClassVTableStructDeclList = GNode.create("StructureDeclarationList");
+            currentClassVTableStructDeclList = GNode.create("StructureDeclarationList");
             {
-              thisClassVTableStructDeclList.add(0, null);
+              currentClassVTableStructDeclList.add(0, null);
             }
-            vtStructDef.add(2, thisClassVTableStructDeclList);
+            vtStructDef.add(2, currentClassVTableStructDeclList);
             vtStructDef.add(3, null);
           }
           vtDeclSpef.add(vtStructDef);
@@ -149,20 +139,20 @@ GNode buildHeaderForClass() {
 //then visits further. 
 
   public void visitClassDeclaration(GNode n) {
-        thisClassName = n.get(1).toString();
+        currentClassName = n.get(1).toString();
 	// uses the classname to create a header for class 
         translatedTree.add(buildHeaderForClass());
 	// returns a tree with "ImplementationDelaration" node with property set to classname to the header.
 	//sets it to global variable to keep track of which class it's translating. 
-        thisClassImplementation = buildImplementationForClass();
+        currentClassImplementation = buildImplementationForClass();
 	// adds the "ImplementationDelaration" node with property set to classname to the header.
-        translatedTree.add(thisClassImplementation);
+        translatedTree.add(currentClassImplementation);
         visit(n);
     }
 
     public GNode buildImplementationForClass() {
         GNode mainTree = GNode.create("ImplementationDeclaration");
-        mainTree.setProperty("className", thisClassName);
+        mainTree.setProperty("className", currentClassName);
         return mainTree;
     }
     
@@ -176,12 +166,12 @@ GNode buildHeaderForClass() {
 	// adds it to vtable global variable it's keeping track of. 
     public void addToVTable(GNode n) {
 	// n.get(3) should be method name. 
-        thisClassVTableStructDeclList.add(0, createPrimaryIdentifier( "__" + thisClassName + "::" + (String)n.get(3) ));
+        currentClassVTableStructDeclList.add(0, createPrimaryIdentifier( "__" + currentClassName + "::" + (String)n.get(3) ));
     }
    
 	// i dont get why this is necessary to visit again using this method. 
     public void addMethodImplementation(GNode n) {
-        thisClassImplementation.add(functionDefForMethDecl(n));
+        currentClassImplementation.add(functionDefForMethDecl(n));
         visit(n);
     }
 
@@ -200,7 +190,7 @@ GNode buildHeaderForClass() {
 		    fncDef.add(1, declSpef);
 		    GNode fncDeclarator = GNode.create("FunctionDeclarator");
 		    {
-			System.out.println() 
+			System.out.println();
 		        GNode simpDecl = (GNode)GNode.create("SimpleDeclarator").add(n.get(3)); //method name
 		        fncDeclarator.add(0, simpDecl);
 		        fncDeclarator.add(1, null);
@@ -218,11 +208,18 @@ GNode buildHeaderForClass() {
 //sets the expression to global variable. 
 // store it and visit
     public void visitExpressionStatement(GNode n) {
-        thisExpressionStatement = n;
+        currentExpressionStatement = n;
         visit(n);
     }
-    
-    public void visitCallExpression(GNode n) {
+    public void visitExpression(GNode n){
+	System.out.println("VisitExpression Visited!");
+	System.out.println(n.getNode(0).getString(0));
+	System.out.println(n.getNode(2).getString(1));    
+	if("+".equals(n.getNode(2).getString(1))) {
+              n.getNode(2).set(1, "<<");
+                               }
+	} 
+    public void visitCallExpression(GNode n) { 
         if( n.size() >= 3 && "println".equals((String)n.get(2)) ) {
             GNode strOut = GNode.create("StreamOutputList");
             strOut.add(0, (GNode)GNode.create( "PrimaryIdentifier" ).add(0, "std::cout") );
@@ -233,17 +230,17 @@ GNode buildHeaderForClass() {
               GNode strLiteral = (GNode)GNode.create( kPrimID ).add(0, "std");
               n.set(0, strLiteral);
             */
-            thisExpressionStatement.set(0, strOut);
+            currentExpressionStatement.set(0, strOut);
         }
         else if( n.size() >= 3 && "print".equals((String)n.get(2)) ) {
             GNode strOut = GNode.create("StreamOutputList");
             strOut.add(0, (GNode)GNode.create( "PrimaryIdentifier" ).add(0, "std::cout") );
             strOut.add(1, n.getNode(3).get(0) ); //FIXME: only adds the first argument
-            thisExpressionStatement.set(0, strOut);
+            currentExpressionStatement.set(0, strOut);
         }
     }
 	
-  // helper method to return a create a node with Primary Identitifier. 
+  // helper method to return a node with Primary Identitifier. 
   GNode createPrimaryIdentifier( String contents ) {
     
     return (GNode)GNode.create( "PrimaryIdentifier" ).add(contents);
