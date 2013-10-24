@@ -212,12 +212,13 @@ GNode buildHeaderForClass() {
         visit(n);
     }
     public void visitExpression(GNode n){
-	System.out.println("VisitExpression Visited!");
-	System.out.println(n.getNode(0).getString(0));
-	System.out.println(n.getNode(2).getString(1));    
-	if("+".equals(n.getNode(2).getString(1))) {
-              n.getNode(2).set(1, "<<");
-                               }
+	System.out.println("debug the shit:"); 
+	System.out.println(n.getNode(0).getName()); 
+	if("PrimaryIdentifier".equals(n.getNode(0).getName())){  
+		if("+".equals(n.getNode(2).getString(1))) {
+         	     n.getNode(2).set(1, "<<");
+                              }
+} 
 	} 
     public void visitCallExpression(GNode n) { 
         if( n.size() >= 3 && "println".equals((String)n.get(2)) ) {
