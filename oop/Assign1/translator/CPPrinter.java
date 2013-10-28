@@ -7,27 +7,7 @@
  * version 2 as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA.
- */
-package oop;
-
-import java.util.Iterator;
-
-import xtc.tree.LineMarker;
-import xtc.tree.Node;
-import xtc.tree.GNode;
-import xtc.tree.Pragma;
-import xtc.tree.Printer;
-import xtc.tree.SourceIdentity;
-import xtc.tree.Token;
-import xtc.tree.Visitor;
+ * but WITHOUT ANY WARRANTY; without even the implied warranty ofimport xtc.tree.Visitor;
 
 /**
  * A pretty printer for C.
@@ -40,7 +20,22 @@ import xtc.tree.Visitor;
  * @author Robert Grimm
  * @version $Revision: 1.75 $
  */
+
+package oop;
+
+import java.util.Iterator;
+import xtc.tree.Visitor;
+import xtc.tree.LineMarker;
+import xtc.tree.Node;
+import xtc.tree.GNode;
+import xtc.tree.Pragma;
+import xtc.tree.Printer;
+import xtc.tree.SourceIdentity;
+import xtc.tree.Token;
+import java.io.*;
 public class CPPrinter extends Visitor {
+
+
 
   /**
    * The flag for printing additional parentheses to avoid gcc
@@ -373,12 +368,37 @@ int ptd = 0;
 
   /** Visit the specified translation unit node. */
   public void visitTranslationUnit(GNode n) {
+      
+     
+      
+      
+      
     if ( ptd == 0) {
+        
+        try { 
+            File xc = new  File("cppFile");
+            xc.mkdir();
+            
+            File cppBuilder = new File("cppFile", "Cplusplus.cpp");
+            
+            PrintWriter pw = new  PrintWriter(cppBuilder);
+       
+        
+        
       System.out.println("#include <iostream>");
-      System.out.println("// #include \"java_lang.h\"");
-	  System.out.println("using namespace java::lang;");
+        pw.println("#include <iostream>");  
+      //System.out.println("// #include \"java_lang.h\"");
+	  //System.out.println("using namespace java::lang;");
+        pw.println("int main() {"); 
+           // pw.println(" cout << \"Hello World\"; "); 
+            pw.println("}");    
+        pw.flush();
+        pw.close();
       System.out.println("int main() {");
       ptd = 1;
+        }
+        catch(Exception e) { 
+        }
     }
     // Reset the state.
     isDeclaration  = false;
