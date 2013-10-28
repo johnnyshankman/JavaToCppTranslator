@@ -123,6 +123,12 @@ public class CPPrinter extends Visitor {
 
   /** The operator precedence level for the current expression. */
   protected int precedence;
+    
+    public  PrintWriter p1; 
+    
+    public  File g1; 
+    
+    public File a1; 
 
   /**
    * Create a new C printer.
@@ -376,24 +382,22 @@ int ptd = 0;
     if ( ptd == 0) {
         
         try { 
-            File xc = new  File("cppFile");
-            xc.mkdir();
+            g1 = new  File("cppFile");
+            g1.mkdir();
             
-            File cppBuilder = new File("cppFile", "Cplusplus.cpp");
+             a1 = new File("cppFile", "Cplusplus.cpp");
             
-            PrintWriter pw = new  PrintWriter(cppBuilder);
+            p1  = new  PrintWriter(a1);
        
         
         
       System.out.println("#include <iostream>");
-        pw.println("#include <iostream>");  
+        p1.println("#include <iostream>");  
       //System.out.println("// #include \"java_lang.h\"");
 	  //System.out.println("using namespace java::lang;");
-        pw.println("int main() {"); 
-           // pw.println(" cout << \"Hello World\"; "); 
-            pw.println("}");    
-        pw.flush();
-        pw.close();
+            p1.println("using namespace std;");
+        p1.println("int main() {"); 
+            
       System.out.println("int main() {");
       ptd = 1;
         }
@@ -2223,6 +2227,10 @@ int ptd = 0;
   
   public void visitStringLiteral(GNode n) {
     System.out.println("\nVisit String Literal");
+      p1.println(" cout << " + n.get(0) +  ";"); 
+      p1.println("}");    
+      p1.flush();
+      p1.close();
     System.out.println(n.get(0));
     for( Object o : n) {
 		if (o instanceof Node) dispatch((GNode)o);
