@@ -51,7 +51,14 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             headerFile.createNewFile(); 
             
             p1 = new PrintWriter(headerFile); 
+            p1.println("#pragma once");
+            p1.println();
             
+            p1.println("#include <stdint.h>");
+            p1.println("#include <string>"); 
+            p1.println(); 
+            p1.println("namespace java {"); 
+            p1.println("namespace lang {");
             p1.println("// Foward Declarations "); 
             p1.println();
 
@@ -263,6 +270,9 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("    }");
              
             p1.println("};"); 
+            p1.println();
+            p1.println("}");
+            p1.println("}");
             
             p1.flush();
             p1.close();
