@@ -50,7 +50,8 @@ SOURCE = \
        InheritanceHandler.java \
        Translator.java 	\
        ASTConverter.java \
-       CPPrinter.java
+       CPPrinter.java \
+       CreateCplusplusHeader.java
 
 JNI_SOURCE =
 

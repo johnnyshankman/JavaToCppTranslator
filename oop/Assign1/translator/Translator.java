@@ -15,13 +15,14 @@ import xtc.parser.Result;
 import xtc.tree.GNode;
 import xtc.tree.Node;
 import xtc.tree.Visitor;
-
+import java.util.*; 
 import xtc.util.Tool;
 
 import oop.GetDependencies;
 import oop.InheritanceHandler;
 import oop.ASTConverter;
 import oop.CPPrinter;
+import java.io.*; 
 
 /**
  * A translator from (a subset of) Java to (a subset of) C++.
@@ -91,6 +92,12 @@ public class Translator extends xtc.util.Tool {
       runtime.console().flush();
     }
 
+      
+      // Create a hash map
+     final  HashMap hm = new HashMap();
+      // Put elements to the map  
+      
+      
     if (runtime.test("countMethods")) {
       new Visitor() {
         private int count = 0;
@@ -116,6 +123,16 @@ public class Translator extends xtc.util.Tool {
       
  
     if (runtime.test("translate")){
+        
+
+
+        
+        
+        
+        
+        
+        
+        
         
         runtime.console().pln("Begin translation...\n").flush();
         runtime.console().pln("Begin depedency finding and resolving.\n").flush();
@@ -148,6 +165,14 @@ public class Translator extends xtc.util.Tool {
         runtime.console().pln("Begin scoping/symbol table stuff.\n").flush();
           
         runtime.console().pln("Begin creating a C++ AST for each Java AST.\n").flush();
+        
+        GNode createCplusplusHeader = layout.getFirstNode(); 
+        
+        CreateCplusplusHeader getHeader = new CreateCplusplusHeader(createCplusplusHeader); 
+               runtime.console().format(createCplusplusHeader).pln().flush(); 
+        
+        
+        /*
 
         ASTConverter cppast = new ASTConverter(layout.getFirstNode(), astArray[0]);
         cppast.translateJavaToCPP();
@@ -155,7 +180,7 @@ public class Translator extends xtc.util.Tool {
         runtime.console().format(translated).pln().flush();
         new CPPrinter(runtime.console()).dispatch(translated);
         runtime.console().flush();
-        
+        **/
           
         runtime.console().pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
           
