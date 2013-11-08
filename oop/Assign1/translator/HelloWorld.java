@@ -1,5 +1,5 @@
 class HelloWorld  {
-    public bool goel(String g) { 
+    public bool goel() { 
         
     }
     

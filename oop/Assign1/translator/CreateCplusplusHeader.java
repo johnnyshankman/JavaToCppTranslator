@@ -201,9 +201,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("    bool (*equals)(" + plainClassName + "," + "Object);"); 
             p1.println("    Class (*getClass)(" + plainClassName + ");"); 
             p1.println("    String (*toString) (" + plainClassName + ");"); 
-            p1.println("    String (*getName) (" + plainClassName + ");"); 
-            p1.println("    Class (*getSuperClass) (" + plainClassName + ")"); 
-            p1.println("    bool (*isInstance) (" + plainClassName + ", Object);"); 
+            
            
             for ( int i = 0; i < names.size(); i++ ) { 
                 
