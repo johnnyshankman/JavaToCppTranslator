@@ -78,16 +78,12 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("      " + "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "_VT* __vptr;"); 
             p1.println();
 
-            p1.println("    " + "String name;"); 
-            p1.println();
 
-            p1.println("    " + "Class parent;");
-            p1.println();
 
             p1.println("     "   +  "// The Constructor"); 
             p1.println();
 
-            p1.println("      " +  "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "(String name, Class parent); "); 
+            p1.println("      " +  "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "(); "); 
             p1.println();
 
             
@@ -226,7 +222,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             // Now the constructor initilization inlined in the header 
             p1.println("    __" + plainClassName + "_VT()");
-            p1.println("    : __isa(__Class:__class());");
+            p1.println("    : __isa(__" + plainClassName + "::__class()),");
             
             List<String> getImplementation = new ArrayList<String>();
             
@@ -246,9 +242,9 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             }
             
             // physically put it in 
-            p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashcode),"); 
+            p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 
             p1.println("      equals((bool(*)(" + plainClassName + ",Object)) &__" + getImplementation.get(1) + "::equals), "); 
-            p1.println("      getClass((Class(*)" + plainClassName + ")) &__" + getImplementation.get(2) + "::getClass), "); 
+            p1.println("      getClass((Class(*)(" + plainClassName + ")) &__" + getImplementation.get(2) + "::getClass), "); 
             p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
           
             

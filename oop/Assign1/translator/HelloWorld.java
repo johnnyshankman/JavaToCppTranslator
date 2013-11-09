@@ -1,11 +1,9 @@
-class HelloWorld  {
+class HelloWorld extends String  {
     public bool goel() { 
         
     }
     
-    public String ankit( ) { 
-        
-    }
+  
     
     public String toString() { 
         
