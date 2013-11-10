@@ -8,7 +8,7 @@ import xtc.lang.JavaFiveParser;
 import xtc.lang.CParser;
 import xtc.lang.JavaPrinter;
 import xtc.lang.CPrinter;
-
+import java.util.regex.*; 
 import xtc.parser.ParseException;
 import xtc.parser.Result;
 
@@ -28,7 +28,10 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
 
 
         GNode createCplusplusHeader; 
-	public CreateCplusplusHeader(GNode n) { 
+	
+    
+    
+    public CreateCplusplusHeader(GNode n) { 
 		
         createCplusplusHeader  = n; 
         
@@ -155,6 +158,40 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
             }
             
+            // params are appended to the methods name 
+            List<String> specialnames = new ArrayList<String>(); 
+            
+            
+            
+            
+            
+            // A single method name which is a string could essential map to however many Strings 
+            Map<String, ArrayList<String>> parameters = new  HashMap<String,ArrayList<String>>(); 
+            
+            // Remove anything after $ in the method these are the parameters that are appended to it 
+            for ( int i = 0; i < names.size(); i++ ) { 
+                
+                Pattern p = Pattern.compile("\\$");    
+                
+                Matcher m = p.matcher(names.get(i)); 
+                
+                if(m.find()) { 
+                   // p1.println("FOUND"); 
+                   // p1.println(m.start());
+                    specialnames.add(names.get(i).substring(0,m.start()));     
+                    
+                }
+                
+                else {
+                    
+                    specialnames.add(names.get(i)); 
+                
+                }
+                
+            } 
+
+            
+            
             
             //p1.println(types2);
             
@@ -164,7 +201,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             for ( int i = 0; i < types2.size(); i++) { 
                 
-                p1.println("    "  + "static " + types2.get(i) + " " + names.get(i) + "( " + plainClassName + ")" + ";" ); 
+                p1.println("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + ")" + ";" ); 
                 
                 p1.println();
                 
@@ -210,7 +247,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
                 if ( !(arr1.contains(names.get(i)))) {
                     
-                    p1.println("    " + types2.get(i) + " (*" + names.get(i) + ") (" + plainClassName + ");"); 
+                    p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName + ");"); 
                     
                     
                 }
@@ -242,21 +279,42 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             }
             
             // physically put it in 
-            p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 
-            p1.println("      equals((bool(*)(" + plainClassName + ",Object)) &__" + getImplementation.get(1) + "::equals), "); 
-            p1.println("      getClass((Class(*)(" + plainClassName + ")) &__" + getImplementation.get(2) + "::getClass), "); 
-            p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
+            if ( getImplementation.get(0).equals("Object")) 
+                p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 
+            else 
+                p1.println("      hashCode(&__" + plainClassName + "::hashCode),"); 
+            
+            
+            if (getImplementation.get(1).equals("Object")) 
+                p1.println("      equals((bool(*)(" + plainClassName + ",Object)) &__" + getImplementation.get(1) + "::equals), "); 
+            
+            else 
+                p1.println("      equals(&__" + plainClassName + "::equals"); 
+            
+            if (getImplementation.get(2).equals("Object"))
+                p1.println("      getClass((Class(*)(" + plainClassName + ")) &__" + getImplementation.get(2) + "::getClass), "); 
+            
+            else 
+                p1.println("      getClass(&__" + plainClassName + ")");
+            
+            
+            // Remember to Take care of the comma issue 
+            if (getImplementation.get(3).equals("Object"))
+                p1.println("      toString((String(*)(" + plainClassName + ")) &__" + getImplementation.get(3) + "::toString), ");
+            
+            else 
+                p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
           
             
             // ADD Remaining Methods to implementation 
             for ( int i = 0; i < names.size(); i++) { 
                 
                 
-                if(!(arr1.contains(names.get(i)))) { 
+                if(!(arr1.contains(specialnames.get(i)))) { 
                     
                    
                         // Remember to Fix this later 
-                        p1.println("    " + names.get(i) + "(&__" + plainClassName + "::" + names.get(i) + "){"); 
+                        p1.println("    " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
                         
                 }
                 

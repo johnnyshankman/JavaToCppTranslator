@@ -1,4 +1,4 @@
-class HelloWorld extends String  {
+class HelloWorld   {
     public bool goel() { 
         
     }
