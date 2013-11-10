@@ -35,7 +35,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
 		
         createCplusplusHeader  = n; 
         
-        
         final PrintWriter p1; 
         
         File headerFile; 
@@ -43,8 +42,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
         File newDirectory;
         
         try { 
-            
-            
             
             newDirectory = new File("cplusplusfiles"); 
             newDirectory.mkdir(); 
@@ -64,8 +61,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("namespace lang {");
             p1.println("// Foward Declarations "); 
             p1.println();
-
-            
             p1.println("struct __" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + ";");
             p1.println();
             
@@ -80,18 +75,12 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("    // The data layout for java.lang.plainClassName");  
             p1.println("      " + "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "_VT* __vptr;"); 
             p1.println();
-
-
-
             p1.println("     "   +  "// The Constructor"); 
             p1.println();
 
             p1.println("      " +  "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "(); "); 
             p1.println();
 
-            
-            
-            
             /* Find Instance Methods of the class Basically go through vtMethodPointersList and 
              go through its children and check if the qualified identifier is the same as the clas name **/
             
@@ -119,7 +108,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     visit(n);
                     
                 }
-                
                 public void visitvtMethodPointer(GNode n) { 
                     
                     counter++;
@@ -139,9 +127,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             }.dispatch(vMethods);
             
             // System.out.println("ARRAY CONTENTS" + names); 
-            
-            
-            
             // Now lets get the type of the method and store it in Types arraylist
             
             // Visit the Method Declarations of the Java AST and store the types in order into an array. Then 
@@ -150,23 +135,15 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             for ( int i = 0; i < indexx.size(); i++ ) { 
                 
-                
                 types2.add(vMethods.getNode(indexx.get(i)).getNode(0).getNode(0).getString(0));
-                
-                
-                
                 
             }
             
             // params are appended to the methods name 
             List<String> specialnames = new ArrayList<String>(); 
             
-            
-            
-            
-            
             // A single method name which is a string could essential map to however many Strings 
-            Map<String, ArrayList<String>> parameters = new  HashMap<String,ArrayList<String>>(); 
+            Map<String, String> parameters = new  HashMap<String,String>(); 
             
             // Remove anything after $ in the method these are the parameters that are appended to it 
             for ( int i = 0; i < names.size(); i++ ) { 
@@ -178,7 +155,8 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 if(m.find()) { 
                    // p1.println("FOUND"); 
                    // p1.println(m.start());
-                    specialnames.add(names.get(i).substring(0,m.start()));     
+                    specialnames.add(names.get(i).substring(0,m.start()));   
+                    parameters.put(specialnames.get(i), names.get(i).substring(m.start(),names.get(i).length())); 
                     
                 }
                 
@@ -189,10 +167,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 }
                 
             } 
-
-            
-            
-            
+           // p1.println(parameters);
             //p1.println(types2);
             
             // Now print the instance methods using the types and names 
@@ -202,23 +177,15 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             for ( int i = 0; i < types2.size(); i++) { 
                 
                 p1.println("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + ")" + ";" ); 
-                
                 p1.println();
-                
-                
             }
             p1.println("    // The Function returning the class Object representing java.lang.plainClassName " ); 
             p1.println("    static Class __class(); "); 
             p1.println();
-
-            
             p1.println("    static __" + plainClassName + "_" + "VT " + "__vtable;"); 
             p1.println();
-
-            
             p1.println(" };"); 
             p1.println();
-            
             
             // Now print the Constructor taking into account which ones are implemented by the given class
             
@@ -251,8 +218,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     
                 }
-                
-                
             } 
             p1.println(); 
             p1.println(); 
@@ -309,16 +274,13 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             // ADD Remaining Methods to implementation 
             for ( int i = 0; i < names.size(); i++) { 
                 
-                
                 if(!(arr1.contains(specialnames.get(i)))) { 
                     
                    
                         // Remember to Fix this later 
-                        p1.println("    " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
+                        p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
                         
                 }
-                
-                
                 
             }
             p1.println("    }");
