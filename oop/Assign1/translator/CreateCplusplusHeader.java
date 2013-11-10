@@ -215,7 +215,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
                 if ( !(arr1.contains(names.get(i)))) {
                     
-                    p1.print("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ")");
+                    p1.print("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");");
                     /*
                     
                     if ( !(parameters.get(specialnames.get(i)).equals("ZeroParams"))) {
