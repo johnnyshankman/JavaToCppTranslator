@@ -163,7 +163,8 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 else {
                     
                     specialnames.add(names.get(i)); 
-                
+                    // The hashmap needs to be consistent 
+                    parameters.put(names.get(i), "ZeroParams"); 
                 }
                 
             } 
@@ -214,8 +215,39 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
                 if ( !(arr1.contains(names.get(i)))) {
                     
-                    p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName + ");"); 
+                    p1.print("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ")");
+                    /*
                     
+                    if ( !(parameters.get(specialnames.get(i)).equals("ZeroParams"))) {
+                        
+                        
+                        Arraylist<Integer> g1 = new ArrayList<Integer>(); 
+                        
+                        
+                        Pattern p = Pattern.compile("\\$");    
+                        
+                        Matcher m = p.matcher(names.get(i)); 
+                        
+                        while(m.find()) { 
+                           
+                            g1.add(m.start()); 
+                            
+                        }
+                        
+                        int getCash=0; 
+                        
+                        for ( int b = 0; b < g1.size(); b++) {
+                            
+                            
+                        
+                            p1.print(", " + names.get(i).substring(g1.get(b), g1.get(b+1))
+                        
+                        
+                       
+                        }
+                        
+                    }
+                    **/      
                     
                 }
             } 
