@@ -8,6 +8,7 @@ import xtc.lang.JavaFiveParser;
 import xtc.lang.CParser;
 import xtc.lang.JavaPrinter;
 import xtc.lang.CPrinter;
+import xtc.lang.JavaAstSimplifier;
 
 import xtc.parser.ParseException;
 import xtc.parser.Result;
@@ -17,6 +18,7 @@ import xtc.tree.Node;
 import xtc.tree.Visitor;
 import java.util.*; 
 import xtc.util.Tool;
+import xtc.util.SymbolTable;
 
 import oop.GetDependencies;
 import oop.InheritanceHandler;
@@ -123,19 +125,8 @@ public class Translator extends xtc.util.Tool {
       
  
     if (runtime.test("translate")){
-        
-
-
-        
-        
-        
-        
-        
-        
-        
-        
         runtime.console().pln("Begin translation...\n").flush();
-        runtime.console().pln("Begin depedency finding and resolving.\n").flush();
+        runtime.console().pln("Finding and resolving dependencies...\n").flush();
         
         GNode[] astArray = new GNode[50]; //arbitrary size
         astArray[0] = (GNode) node; //0th spot is the original java file's AST
@@ -151,40 +142,74 @@ public class Translator extends xtc.util.Tool {
         }
 		astArray[0] = (GNode)node; //just to ensure we have the original java ast in slot 0 still
           
-         
+		  
+		
+		
+		
+		
+		
+		
+        runtime.console().pln("Building symbol table...\n").flush();
+        
+        
+        new JavaAstSimplifier().dispatch((GNode)node);
+        final SymbolTable table = new SymbolTable(); //empty symbol table
+        new SymbolTableHandler(runtime, table).dispatch((GNode)node); //create the table
+        table.current().dump( runtime.console() ); //print dump the table into console
+        runtime.console().pln().pln().pln().flush();
           
-        runtime.console().pln("Begin inheritance and data layout handling.\n").flush();
+        
+        
+        
+        
+        
+        runtime.console().pln("Building vtables and data-layouts for C++ ASTs...\n").flush();
+        
         
         InheritanceHandler layout = new InheritanceHandler(astArray, runtime.console());
         //done
         
-
-
+        runtime.console().format(layout.getFirstNode()).pln().pln().pln().pln().flush();
         
         
-        runtime.console().pln("Begin scoping/symbol table stuff.\n").flush();
+        
+        
+     
+        
+
           
-        runtime.console().pln("Begin creating a C++ AST for each Java AST.\n").flush();
+        runtime.console().pln("Creating header file...\n").flush();
         
         GNode createCplusplusHeader = layout.getFirstNode(); 
-        
         CreateCplusplusHeader getHeader = new CreateCplusplusHeader(createCplusplusHeader); 
-               runtime.console().format(createCplusplusHeader).pln().flush(); 
+        
+        runtime.console().pln("Header file can now be found in output directory.\n").pln().pln().pln().flush();
         
         
-        /*
-
-        ASTConverter cppast = new ASTConverter(layout.getFirstNode(), astArray[0]);
+        
+        
+        
+        runtime.console().pln("Translating body...\n").pln().pln().pln().flush();
+        /*ASTConverter cppast = new ASTConverter(layout.getFirstNode(), astArray[0]);
         cppast.translateJavaToCPP();
         GNode translated = cppast.getTranslatedTree();
         runtime.console().format(translated).pln().flush();
         new CPPrinter(runtime.console()).dispatch(translated);
         runtime.console().flush();
         **/
+         
+        
+        
+        
+        
+        runtime.console().pln("Siphoning output to .cc files...").pln().pln().pln().flush();
           
-        runtime.console().pln("Begin creating C++ files by using CppPrinter on each C++ AST and siphoning the output to output.cpp").flush();
-          
-        runtime.console().pln("... translation is now finished.\n").flush();
+        
+        
+        
+        
+        
+        runtime.console().pln("... the translation is now finished! Please check src/oop/output for your translated files. \n").flush();
 
        
       

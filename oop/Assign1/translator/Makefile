@@ -51,7 +51,8 @@ SOURCE = \
        Translator.java 	\
        ASTConverter.java \
        CPPrinter.java \
-       CreateCplusplusHeader.java
+       CreateCplusplusHeader.java \
+       SymbolTableHandler.java
 
 JNI_SOURCE =
 
