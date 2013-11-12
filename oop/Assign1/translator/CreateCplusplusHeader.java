@@ -109,7 +109,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             final List<Integer> indexx = new ArrayList<Integer>();
             
-            final HashMap<Integer, String> checkForOtherThanSuperClass = new HashMap<Integer, String>(); 
+            final HashMap<Integer, String> checkForOtherSuperClass = new HashMap<Integer, String>(); 
             
             
             // Lets find out which methods are unique 
@@ -137,8 +137,13 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                         
                         // There needs to be a check for the other than __Object && __SuperClass 
                         
-                      //  checkForSuperClass.put(counter, n.getNode(1).getString(1)); 
+                    checkForOtherSuperClass.put(counter, n.getNode(1).getString(1)); 
+                        
                     }   
+                    
+                    else 
+                        checkForOtherSuperClass.put(counter, n.getNode(1).getString(1)); 
+                    
                 }
                 
                 public void visit(Node n) {
@@ -147,13 +152,15 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
             }.dispatch(vMethods);
             
+            //p1.println(checkForOtherSuperClass);
+            //p1.println(names);
             // System.out.println("ARRAY CONTENTS" + names); 
             // Now lets get the type of the method and store it in Types arraylist
             
             // Visit the Method Declarations of the Java AST and store the types in order into an array. Then 
             // store the corresponding names of the methods in another array then do matching to determine the 
             // the types of the method 
-            
+           // p1.println(checkForOtherSuperClass);
             for ( int i = 0; i < indexx.size(); i++ ) { 
                 
                 
@@ -243,7 +250,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
                 if ( !(arr1.contains(names.get(i)))) {
                     
-                    p1.print("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");");
+                    p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");");
                     /*
                     
                     if ( !(parameters.get(specialnames.get(i)).equals("ZeroParams"))) {
@@ -328,14 +335,19 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             }
             **/
             // ADD Remaining Methods to implementation 
+          
             for ( int i = 0; i < names.size(); i++) { 
                 
-                if(!(arr1.contains(specialnames.get(i)))) { 
+                if(!(arr1.contains(specialnames.get(i))) && checkForOtherSuperClass.get(i+6).equals(className)) { 
                     // Remember to Fix this later 
                     p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
                 }
+                else 
+                    p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
+                
                 
             }
+             
             p1.println("    }");
             p1.println("};"); 
             p1.println();
