@@ -26,11 +26,8 @@ import java.io.*;
 
 public class CreateCplusplusHeader extends xtc.util.Tool { 
 
-
-        GNode createCplusplusHeader; 
-	
-    
-    
+    GNode createCplusplusHeader; 
+        
     public CreateCplusplusHeader(GNode n) { 
 		
         createCplusplusHeader  = n; 
@@ -42,18 +39,13 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
         File newDirectory;
         
         try { 
-            
             newDirectory = new File("cplusplusfiles"); 
             newDirectory.mkdir(); 
-            
             headerFile = new File("cplusplusfiles", "Header.h"); 
-            
             headerFile.createNewFile(); 
-            
             p1 = new PrintWriter(headerFile); 
             p1.println("#pragma once");
             p1.println();
-            
             p1.println("#include <stdint.h>");
             p1.println("#include <string>"); 
             p1.println(); 
@@ -61,40 +53,64 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("namespace lang {");
             p1.println("// Foward Declarations "); 
             p1.println();
-            p1.println("struct __" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + ";");
+            GNode vMethods = (GNode) createCplusplusHeader.getNode(0);
+            
+            // Find out when the virtual method declarations ends 
+            final ArrayList<Integer> getCounter = new ArrayList<Integer>(); 
+            new Visitor() {
+                int counter2 = 0; 
+                public void visitVirtualMethodDeclaration(GNode n ) { 
+                    counter2++; 
+                    getCounter.add(counter2); 
+                    
+                }
+                
+                public void visit(Node n) {
+                    for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                }
+                
+            }.dispatch(vMethods);
+            
+            int startHere = getCounter.get(getCounter.size()-1) + 1; 
+           // p1.println(startHere);
+            String className = createCplusplusHeader.getNode(0).getNode(startHere).getNode(4).getNode(0).getString(0); 
+            
+            String plainClassName = className.substring(2, className.length()); 
+            // p1.println(plainClassName); 
+            //p1.flush();
+            //p1.close();
+            // p1.println(getCounter); 
+            p1.println("struct __" + plainClassName + ";");
             p1.println();
             
-            p1.println("struct __" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "_VT;");
+            p1.println("struct __" + plainClassName + "_VT;");
             p1.println();
 
-            p1.println("typedef " + "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "* " + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + ";");
+            p1.println("typedef " + "__" + plainClassName + "* " + plainClassName + ";");
             p1.println();
 
-            p1.println("struct __" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + " { " );
+            p1.println("struct __" + plainClassName + " { " );
             p1.println();
             p1.println("    // The data layout for java.lang.plainClassName");  
-            p1.println("      " + "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "_VT* __vptr;"); 
+            p1.println("      " + "__" + plainClassName + "_VT* __vptr;"); 
             p1.println();
             p1.println("     "   +  "// The Constructor"); 
             p1.println();
 
-            p1.println("      " +  "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1) + "(); "); 
+            p1.println("      " +  "__" + plainClassName + "(); "); 
             p1.println();
-
-            /* Find Instance Methods of the class Basically go through vtMethodPointersList and 
-             go through its children and check if the qualified identifier is the same as the clas name **/
+            //Find Instance Methods of the class Basically go through vtMethodPointersList and 
+            //  go through its children and check if the qualified identifier is the same as the clas name 
             
+            // Store the names in a Arraylist type
             final  List<String> names = new ArrayList<String>(); 
             
             List<String> types2 = new ArrayList<String>();
             
             final List<Integer> indexx = new ArrayList<Integer>();
             
-            final String className = "__" + createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1); 
+            final HashMap<Integer, String> checkForOtherThanSuperClass = new HashMap<Integer, String>(); 
             
-            String plainClassName = createCplusplusHeader.getNode(0).getNode(6).getNode(2).getNode(0).getString(1);
-            
-            GNode vMethods = (GNode) createCplusplusHeader.getNode(0);
             
             // Lets find out which methods are unique 
             new Visitor() {
@@ -112,11 +128,16 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     counter++;
                     
-                    if( n.getNode(1).getString(1).equals(className) && !(n.getString(0).equals("main$String"))) { 
+                    if( !(n.getNode(1).getString(1).equals("__Object")) && !(n.getString(0).equals("main$String"))) { 
                         
                         //  p1.println(n.getString(0)); 
                         indexx.add(counter);
                         names.add(n.getString(0)); 
+                        
+                        
+                        // There needs to be a check for the other than __Object && __SuperClass 
+                        
+                      //  checkForSuperClass.put(counter, n.getNode(1).getString(1)); 
                     }   
                 }
                 
@@ -135,7 +156,12 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             for ( int i = 0; i < indexx.size(); i++ ) { 
                 
-                types2.add(vMethods.getNode(indexx.get(i)).getNode(0).getNode(0).getString(0));
+                
+                if(vMethods.getNode(indexx.get(i)).getNode(0).getName().equals("Type"))
+                    types2.add(vMethods.getNode(indexx.get(i)).getNode(0).getNode(0).getString(0));
+                else 
+                    types2.add("void"); 
+                
                 
             }
             
@@ -174,7 +200,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             // Now print the instance methods using the types and names 
             p1.println("    // The instance methods of java.lang.plainClassName"); 
             
-            
             for ( int i = 0; i < types2.size(); i++) { 
                 
                 p1.println("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + ")" + ";" ); 
@@ -205,12 +230,15 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             arr1.add("getSuperClass"); 
             arr1.add("isInstance"); 
             
+           // Basically iterate through map and add any methods that have a type not equal to the 
+            
+          
+            // You need to add the inherited types 
             p1.println("    int32_t (*hashCode)(" + plainClassName + ");");
             p1.println("    bool (*equals)(" + plainClassName + "," + "Object);"); 
             p1.println("    Class (*getClass)(" + plainClassName + ");"); 
             p1.println("    String (*toString) (" + plainClassName + ");"); 
             
-           
             for ( int i = 0; i < names.size(); i++ ) { 
                 
                 if ( !(arr1.contains(names.get(i)))) {
@@ -220,9 +248,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     if ( !(parameters.get(specialnames.get(i)).equals("ZeroParams"))) {
                         
-                        
                         Arraylist<Integer> g1 = new ArrayList<Integer>(); 
-                        
                         
                         Pattern p = Pattern.compile("\\$");    
                         
@@ -233,22 +259,16 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                             g1.add(m.start()); 
                             
                         }
-                        
                         int getCash=0; 
                         
                         for ( int b = 0; b < g1.size(); b++) {
                             
-                            
-                        
-                            p1.print(", " + names.get(i).substring(g1.get(b), g1.get(b+1))
-                        
-                        
-                       
+                                p1.print(", " + names.get(i).substring(g1.get(b), g1.get(b+1))
                         }
                         
                     }
-                    **/      
-                    
+                       
+                    **/
                 }
             } 
             p1.println(); 
@@ -271,10 +291,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     getImplementation.add("Object"); 
                 }
-                
-                
             }
-            
             // physically put it in 
             if ( getImplementation.get(0).equals("Object")) 
                 p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 
@@ -294,29 +311,32 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             else 
                 p1.println("      getClass(&__" + plainClassName + ")");
             
-            
             // Remember to Take care of the comma issue 
             if (getImplementation.get(3).equals("Object"))
                 p1.println("      toString((String(*)(" + plainClassName + ")) &__" + getImplementation.get(3) + "::toString), ");
             
             else 
                 p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
-          
             
+            /*
+            for ( Map.Entry entry: checkForSuperClass.entrySet()) { 
+                
+                if(!(entry.getValue().equals("__Object")) && !(entry.getValue().equals(className) )) { 
+                    
+                    p1.println("     " + entry.getKey() + "(("+types
+            }
+            }
+            **/
             // ADD Remaining Methods to implementation 
             for ( int i = 0; i < names.size(); i++) { 
                 
                 if(!(arr1.contains(specialnames.get(i)))) { 
-                    
-                   
-                        // Remember to Fix this later 
-                        p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
-                        
+                    // Remember to Fix this later 
+                    p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
                 }
                 
             }
             p1.println("    }");
-             
             p1.println("};"); 
             p1.println();
             p1.println("}");
@@ -324,18 +344,11 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             p1.flush();
             p1.close();
-            
-            
+           
         } 
-        
         catch ( Exception e) { 
         }
-
-        
-        
-        
-        
-	}
+    }
     
     public String getName() {
         return "Java to C++ Translator";
@@ -356,8 +369,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
         bool("translate", "translate", false, "Translate from Java to C++.").
         bool("findDependencies", "findDependencies", false, "Find all Dependencies of given Java file.");
     }
-
-    
     public void prepare() {
         super.prepare();
         
