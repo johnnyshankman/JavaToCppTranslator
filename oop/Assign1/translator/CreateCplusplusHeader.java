@@ -27,10 +27,14 @@ import java.io.*;
 public class CreateCplusplusHeader extends xtc.util.Tool { 
 
     GNode createCplusplusHeader; 
+    
+    GNode ORIGINALJAVAAST; 
         
-    public CreateCplusplusHeader(GNode n) { 
+    public CreateCplusplusHeader(GNode n, GNode f ) { 
 		
         createCplusplusHeader  = n; 
+        
+        ORIGINALJAVAAST = (GNode)f; 
         
         final PrintWriter p1; 
         
@@ -54,6 +58,52 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("// Foward Declarations "); 
             p1.println();
             GNode vMethods = (GNode) createCplusplusHeader.getNode(0);
+            
+            
+            // We need a mapping of methodName to accessibility
+           final HashMap<String,String> mNAccess = new HashMap<String,String>(); 
+            
+            
+            
+            // We need a mapping to methodName to whetherItsStatic
+           
+            
+            new Visitor() {
+                
+                
+                public void visitCompiliationUnit(GNode n) { 
+                    
+                    visit(n); 
+                }
+                
+                public void visitClassDeclaration(GNode n) { 
+                    
+                    
+                    visit(n); 
+                    
+                }
+                
+                
+                public void visitMethodDeclaration(GNode n ) { 
+                    
+                    
+                        // We need to figure out whether this method is static it should be excluded from VTable 
+                    
+                    if ( n.getNode(0).size() > 1 && !(n.getString(3).equals("main$string")) ) { 
+                        
+                        mNAccess.put(n.getString(3), n.getNode(0).getNode(1).getString(0)); 
+                    }
+                    visit(n); 
+                }
+                
+                public void visit(Node n) {
+                    for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                }
+                
+            }.dispatch(ORIGINALJAVAAST);
+            
+            p1.println(mNAccess);
+            p1.println(mNAccess.get("goel")); 
             
             // Find out when the virtual method declarations ends 
             final ArrayList<Integer> getCounter = new ArrayList<Integer>(); 
@@ -239,7 +289,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
            // Basically iterate through map and add any methods that have a type not equal to the 
             
-          
             // You need to add the inherited types 
             p1.println("    int32_t (*hashCode)(" + plainClassName + ");");
             p1.println("    bool (*equals)(" + plainClassName + "," + "Object);"); 
@@ -250,7 +299,29 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
                 if ( !(arr1.contains(names.get(i)))) {
                     
-                    p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");");
+                    boolean turnOn = false;
+                    boolean turnDoubleOn = false; 
+                    if ( mNAccess.containsKey(names.get(i))) { 
+                        turnOn = true; 
+                    }
+                        
+                        if ( turnOn) { 
+                            
+                            if ( (mNAccess.get(names.get(i)).equals("static")))  
+                                turnDoubleOn=true;
+                            
+                        }
+                        
+                            if ( turnDoubleOn == false )    
+                                p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");");
+                                                            
+                            
+                    else { 
+                        turnOn = false; 
+                        turnDoubleOn = false; 
+                    }
+                            
+                            
                     /*
                     
                     if ( !(parameters.get(specialnames.get(i)).equals("ZeroParams"))) {
@@ -338,13 +409,36 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
           
             for ( int i = 0; i < names.size(); i++) { 
                 
-                if(!(arr1.contains(specialnames.get(i))) && checkForOtherSuperClass.get(i+6).equals(className)) { 
-                    // Remember to Fix this later 
-                    p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
+                boolean turnOn = false;
+                boolean turnDoubleOn = false; 
+                if ( mNAccess.containsKey(names.get(i))) { 
+                    turnOn = true; 
                 }
-                else 
-                    p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
                 
+                if ( turnOn) { 
+                    
+                    if ( (mNAccess.get(names.get(i)).equals("static")))  
+                        turnDoubleOn=true;
+                    
+                }
+                
+                if ( turnDoubleOn == false )    {
+                    
+                    
+                    
+                    if(!(arr1.contains(specialnames.get(i))) && checkForOtherSuperClass.get(i+6).equals(className) && !(mNAccess.get(names.get(i)).equals("static"))) { 
+                        // Remember to Fix this later 
+                        p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
+                    }
+                    else 
+                        p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
+                }
+                    
+                    else { 
+                    turnOn = false; 
+                    turnDoubleOn = false; 
+                }
+
                 
             }
              
