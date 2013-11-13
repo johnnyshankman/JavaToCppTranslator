@@ -102,8 +102,8 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
             }.dispatch(ORIGINALJAVAAST);
             
-            p1.println(mNAccess);
-            p1.println(mNAccess.get("goel")); 
+           // p1.println(mNAccess);
+           // p1.println(mNAccess.get("goel")); 
             
             // Find out when the virtual method declarations ends 
             final ArrayList<Integer> getCounter = new ArrayList<Integer>(); 
