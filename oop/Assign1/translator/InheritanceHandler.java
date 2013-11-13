@@ -297,16 +297,8 @@ public class InheritanceHandler extends Visitor {
         **/
 		
 		
-		//--Method Node Editing
-		boolean staticAccess = false; 
-		if (n.getNode(0).size()>1) { 
-            
-            staticAccess = true;  
-            
-        }
         
-        if ( !(staticAccess) )  { 
-        
+                
         String methodName = n.getString(3);
 		
 		if(methodName == "main"){
@@ -381,7 +373,7 @@ public class InheritanceHandler extends Visitor {
 			thisDataLayoutsMethodList.add(method); //add this method to the method list
 		}
             
-        }
+     
 	}
 	
 	
