@@ -1,22 +1,60 @@
-class HelloWorld   {
-    public bool goel() { 
-        
-    }
+
+class C { 
     
-  
-    
-    public String toString() { 
+    public void c() { 
         
         
     }
     
+}
+
+
+
+
+
+class B  extends  C { 
+    
+    public void b() { 
+        
+        
+    }
+    
+}
+
+
+
+
+
+class Test extends  B { 
+
+    
+     public  void g(String c) { 
+        
+        
+    }
+    
+   
+    
+    
+    
+}
+
+
+
+
+class HelloWorld extends Test  {
+    public static bool goel() { 
+        return true; 
+    }
+    
+    public int goel2() { 
+        
+        return 6; 
+        
+        
+    }
+    
+   
  
-    public static void main(String[] args) {
-        System.out.println("he");
-       System.out.println("Hello World!");
-       int x = 0;
-       x = 4 + 5;
-       
-    }
     
 }
