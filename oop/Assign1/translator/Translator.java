@@ -169,7 +169,7 @@ public class Translator extends xtc.util.Tool {
         InheritanceHandler layout = new InheritanceHandler(astArray, runtime.console());
         //done
         
-        runtime.console().format(layout.getFirstNode()).pln().pln().pln().pln().flush();
+        runtime.console().format(layout.getClassTree)).pln().pln().pln().pln().flush();
         
         
         
@@ -180,7 +180,7 @@ public class Translator extends xtc.util.Tool {
           
         runtime.console().pln("Creating header file...\n").flush();
         
-        GNode createCplusplusHeader = layout.getFirstNode(); 
+        GNode createCplusplusHeader = layout.getClassTree();
         CreateCplusplusHeader getHeader = new CreateCplusplusHeader(createCplusplusHeader); 
         
         runtime.console().pln("Header file can now be found in output directory.\n").pln().pln().pln().flush();
