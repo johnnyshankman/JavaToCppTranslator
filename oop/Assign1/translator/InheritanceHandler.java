@@ -50,7 +50,7 @@ public class InheritanceHandler extends Visitor {
 			}
 		}
 		
-        //printClassTree(); //debug! print that mofuckin tree!
+        //printClassTree(); //debug!
 	}
 	
 	
@@ -476,8 +476,8 @@ public class InheritanceHandler extends Visitor {
 		
     }
 	
-	public GNode getFirstNode(){
-		return currentHeaderNode;
+	public GNode getClassTree(){
+		return classTree;
 	}
 	
 	//given a classDec node give me the class name
