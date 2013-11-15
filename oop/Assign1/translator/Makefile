@@ -68,3 +68,14 @@ JAR_EXTRAS =
 ifdef JAVA_DEV_ROOT
 include $(JAVA_DEV_ROOT)/Makerules
 endif
+
+patchxtc:
+	cd ..; \
+	cp oop/Patches/JavaExternalAnalyzerPatch.java xtc/lang; \
+	diff -uN xtc/lang/JavaExternalAnalyzer.java xtc/lang/JavaExternalAnalyzerPatch.java >JavaExternalAnalyzer.patch; \
+	cp JavaExternalAnalyzer.patch xtc/lang; \
+	cd xtc/lang; \
+	ls; \
+	patch JavaExternalAnalyzer.java JavaExternalAnalyzer.patch; \
+	rm JavaExternalAnalyzer.patch;\
+	rm JavaExternalAnalzyerPatch.java
