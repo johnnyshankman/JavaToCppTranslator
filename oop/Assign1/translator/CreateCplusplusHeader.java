@@ -168,6 +168,106 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println();
             p1.println("    // The data layout for java.lang.plainClassName");  
             p1.println("      " + "__" + plainClassName + "_VT* __vptr;"); 
+               
+               
+               
+            // Get the Field Decl in this 
+               
+               final GNode fields = GNode.create("Fields");
+               new Visitor() {
+                   public void visitDataLayoutDeclaration(GNode n) { 
+                       visit(n); 
+                       
+                       
+                   }
+                   
+                   public void visitDataFieldList(GNode n) { 
+                       
+                       
+                       fields.add(n); 
+                       
+                   } 
+                   
+                 
+                   
+                   public void visit(Node n) {
+                       for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                   }
+                
+               }.dispatch(createCplusplusHeader);
+              // p1.println(fields.size());
+               
+               final ArrayList<String> privateOrpublic = new ArrayList<String>();
+               final ArrayList<String> PrimitiveType = new ArrayList<String>(); 
+               final ArrayList<String> Decl = new ArrayList<String>();
+               
+               new Visitor() {
+                   public void visitDataFieldList(GNode n) { 
+                       visit(n); 
+                       
+                       
+                   }
+                   
+                   public void visitFieldDeclaration(GNode n) { 
+                      
+                       if (n.getNode(0).size() > 0 ) 
+                       privateOrpublic.add(n.getNode(0).getNode(0).getString(0));
+                       
+                       
+                       PrimitiveType.add(n.getNode(1).getNode(0).getString(0)); 
+                       
+                       Decl.add(n.getNode(2).getNode(0).getString(0)); 
+                       
+                   } 
+                   
+                   
+                   
+                   public void visit(Node n) {
+                       for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                   }
+                   
+               }.dispatch(fields);
+               
+               // Print out the Data Fields 
+               for ( int c = 0; c < Decl.size(); c++) { 
+                   
+                   
+                   p1.println();
+                   p1.println( "     " + PrimitiveType.get(c) + " " + Decl.get(c) + ";");
+                   
+               }
+               
+               
+
+              // p1.println(fields.size());
+                /*   
+                    
+               for ( int c = 0; c < fields.size(); c++) { 
+                   
+                   
+                   if(fields.getNode(c).getNode(0).size() > 0) { 
+                       
+                       p1.println(fields.getNode(c).getNode(0).getString(0) + " :");
+                       
+                       
+                   }
+                   
+                   
+                   p1.print(fields.getNode(c).getNode(1).getNode(0).getString(0) + "   "); 
+                    
+                   p1.print(fields.getNode(c).getNode(2).getNode(0).getString(0)); 
+                   
+               }
+               **/
+               
+               // Visit each DataFieldList and store accordingly each Modifier, Type andDeclarator into separate arrays then basically iterate through them and 
+                
+               
+               
+               
+               
+               
+               
             p1.println();
             p1.println("     "   +  "// The Constructor"); 
             p1.println();
