@@ -1,18 +1,19 @@
 ******* THE TEAM *******
 
-Put all java files in xtc/src/oop
+1. Put all java files in xtc/src/oop
 
-While in the src/oop directory
+2. While in the src/oop directory run these commands ONCE to forever patch xtc.lang's JavaExternalAnalyzer to run  with our program:
 
-Run 'make' command to compile everything.
+    $ make patchxtc
+    $ cd ../..
+    $ make clean
+    $ make
+    $ cd src/oop
 
-To run the translation program on our test file use the following command:
+3. To run the translation program on our test files use the following command (replace # with a number):
 
-~$ java oop.Translate -translate Test.java
+    $ java oop.Translate -translate Tests/Test#.java
 
+4. Translated files can be found in the directory src/oop/cplusplusfiles
 
-
-The output is mostly debugging from CppPrinter to make sure our C++ AST is working correctly at the moment.
-
-We're working on getting the pretty printing together.
-
+DEBUGGING: Currently everything in the window is basically debugging.
