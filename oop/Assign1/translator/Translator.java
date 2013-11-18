@@ -22,6 +22,7 @@ import xtc.util.SymbolTable;
 
 import oop.GetDependencies;
 import oop.InheritanceHandler;
+import oop.SymbolTableHandler;
 import oop.ASTConverter;
 import oop.CPPrinter;
 import java.io.*; 
@@ -169,7 +170,7 @@ public class Translator extends xtc.util.Tool {
         InheritanceHandler layout = new InheritanceHandler(astArray, runtime.console());
         //done
         
-        runtime.console().format(layout.getClassTree)).pln().pln().pln().pln().flush();
+        runtime.console().format(layout.getClassTree()).pln().pln().pln().pln().flush();
         
         
         
@@ -190,14 +191,17 @@ public class Translator extends xtc.util.Tool {
         
         
         runtime.console().pln("Translating body...\n").pln().pln().pln().flush();
-        /*ASTConverter cppast = new ASTConverter(layout.getFirstNode(), astArray[0]);
-        cppast.translateJavaToCPP();
-        GNode translated = cppast.getTranslatedTree();
-        runtime.console().format(translated).pln().flush();
-        new CPPrinter(runtime.console()).dispatch(translated);
-        runtime.console().flush();
-        **/
-         
+        
+        for(int i=0 ; i<astArray.length ; i++)
+        {
+        	if(astArray[i]!=null)
+        	{
+        		ASTConverter ccConverter = new ASTConverter(astArray[i], layout, table, runtime.console() );
+        		ccConverter.createCCTree();
+        		GNode ccAst = ccConverter.getCCTree();
+        		runtime.console().format(ccAst).pln().flush();
+        	}
+        }
         
         
         
