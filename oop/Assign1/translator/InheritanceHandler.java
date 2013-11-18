@@ -544,6 +544,72 @@ public class InheritanceHandler extends Visitor {
 			
 	    }.dispatch(classTree));
     }
+    
+    
+    /**
+     * 
+     * Return's a specific node from a Virtual Table
+     * @param vtn
+     * @param m
+     * @return a specific GNode from the virtual table
+     */
+    public GNode getVTMethod(GNode vtn, String m) {
+		//	System.out.println("--- Enter CLP");
+		
+		// Declared final to be accessible from inner Visitor
+		final String mName = m;
+		//	System.out.println("--- Searching for method " + mName);
+		
+		GNode returnThis = (GNode)( new Visitor () {
+			
+			public GNode visitVirtualMethodDeclaration(GNode n) {
+				
+				//		    System.out.println("\t--- At VirtualMethodDeclaration node:"
+				//				       + n.getString(1));
+				
+				if( mName.equals(n.getString(1)) ) {
+					// Found the node
+					//			System.out.println("/t--- Returning VirtualMethodDeclaration node " + n.getString(1));
+					//			System.out.println("/t--- that node is" + n.toString());
+					
+					return n;
+				}
+				
+				// Keep Searching
+				for( Object o : n) {
+					if (o instanceof Node) {
+						GNode returnValue = (GNode)dispatch((GNode)o);
+						if( returnValue != null ) return returnValue;
+					}
+				}
+				
+				return null;
+				
+			}
+			
+			public GNode visit(GNode n) { // override visit for GNodes
+				
+				// Keep Searching
+				for( Object o : n) {
+					if (o instanceof Node) {
+						GNode returnValue = (GNode)dispatch((GNode)o);
+						if( returnValue != null ) return returnValue;
+					}
+				}
+				
+				return null;
+				
+			}
+			
+	    }.dispatch(vtn));
+		
+		
+		//	if(null == returnThis)
+		//	    System.out.println("/t--- null :-(");
+		
+		return returnThis;
+		
+    }
 	
 	
 	
