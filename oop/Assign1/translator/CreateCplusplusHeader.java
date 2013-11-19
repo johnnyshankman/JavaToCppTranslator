@@ -26,6 +26,7 @@ import java.io.*;
 
 
 
+
 /* Created by Ankit Goel**/
 public class CreateCplusplusHeader extends xtc.util.Tool { 
     
@@ -213,8 +214,8 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                        if (n.getNode(0).size() > 0 ) 
                        privateOrpublic.add(n.getNode(0).getNode(0).getString(0));
                        
-                       
-                       PrimitiveType.add(n.getNode(1).getNode(0).getString(0)); 
+                       if ( n.getNode(1).getNode(0).getString(0).equals("int"))
+                           PrimitiveType.add("int32_t"); 
                        
                        Decl.add(n.getNode(2).getNode(0).getString(0)); 
                        
@@ -236,37 +237,6 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                    p1.println( "     " + PrimitiveType.get(c) + " " + Decl.get(c) + ";");
                    
                }
-               
-               
-
-              // p1.println(fields.size());
-                /*   
-                    
-               for ( int c = 0; c < fields.size(); c++) { 
-                   
-                   
-                   if(fields.getNode(c).getNode(0).size() > 0) { 
-                       
-                       p1.println(fields.getNode(c).getNode(0).getString(0) + " :");
-                       
-                       
-                   }
-                   
-                   
-                   p1.print(fields.getNode(c).getNode(1).getNode(0).getString(0) + "   "); 
-                    
-                   p1.print(fields.getNode(c).getNode(2).getNode(0).getString(0)); 
-                   
-               }
-               **/
-               
-               // Visit each DataFieldList and store accordingly each Modifier, Type andDeclarator into separate arrays then basically iterate through them and 
-                
-               
-               
-               
-               
-               
                
             p1.println();
             p1.println("     "   +  "// The Constructor"); 
@@ -378,9 +348,54 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             for ( int i = 0; i < types2.size(); i++) { 
                 
-                p1.println("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + ")" + ";" ); 
+                
+                if ( parameters.get(specialnames.get(i)).equals("ZeroParams"))
+                    p1.println("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + ")" + ";" ); 
+                
+                
+                else { 
+                        
+                     ArrayList<Integer> getTheParameters = new ArrayList<Integer>(); 
+
+                    
+                     p1.print("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + "," ); 
+                    
+                    Pattern pp = Pattern.compile("\\$");    
+                    
+                    Matcher mm = pp.matcher(parameters.get(specialnames.get(i))); 
+                    
+                    while (mm.find()) { 
+                        
+                        getTheParameters.add(mm.start());
+                        
+                    }
+                    
+                    
+                    for ( int cc = 0; cc < getTheParameters.size(); cc++ ) { 
+                        
+                        
+                        if ( cc != getTheParameters.size()-1) {
+                            
+                            p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, getTheParameters.get(cc+1)) + ","); 
+                            
+                            
+                        }
+                        else {
+                            int length = parameters.get(specialnames.get(i)).length();
+                            p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, length) + ");");
+                            
+                        }
+                        
+                    }
+                    
+                }
+                
+                
                 p1.println();
+            
+            
             }
+            p1.println();
             p1.println("    // The Function returning the class Object representing java.lang.plainClassName " ); 
             p1.println("    static Class __class(); "); 
             p1.println();
@@ -414,10 +429,48 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             for ( int i = 0; i < names.size(); i++ ) { 
                 
                 if ( !(arr1.contains(names.get(i)))) {
+                    p1.println();
+                    ArrayList<Integer> getTheParameters = new ArrayList<Integer>(); 
                     
-                   
-                                p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");");
-                                                            
+                    
+                    
+                    
+                    if ( parameters.get(specialnames.get(i)).equals("ZeroParams"))
+                    p1.println("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName  + ");" );
+                    
+                    else { 
+                    Pattern pp = Pattern.compile("\\$");    
+                    
+                    Matcher mm = pp.matcher(parameters.get(specialnames.get(i))); 
+                    
+                    while (mm.find()) { 
+                                           
+                        getTheParameters.add(mm.start());
+                    
+                    }
+                        p1.print("    " + types2.get(i) + " (*" + specialnames.get(i) + ") (" + plainClassName + "," );
+
+                    
+                        for ( int cc = 0; cc < getTheParameters.size(); cc++ ) { 
+                            
+                            
+                            if ( cc != getTheParameters.size()-1) {
+                                
+                                p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, getTheParameters.get(cc+1)) + ","); 
+                            
+                            
+                            }
+                            else {
+                                int length = parameters.get(specialnames.get(i)).length();
+                                p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, length) + ");");
+                            
+                            }
+                            
+                        }
+                        
+                        
+                    //p1.println(getTheParameters);
+                    }                                    
                 }
             } 
            
@@ -441,7 +494,8 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     getImplementation.add("Object"); 
                 }
             }
-            // physically put it in 
+            
+            // Hardcoded May Need to Change in the final Phase 
             if ( getImplementation.get(0).equals("Object")) 
                 p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 
             else 
@@ -467,27 +521,81 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             else 
                 p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
             
-           // ADD Remaining Methods to implementation 
+           
+            // ADD Remaining Methods to implementation 
             for ( int i = 0; i < names.size(); i++) { 
                                   
                     if(!(arr1.contains(specialnames.get(i))) && checkForOtherSuperClass.get(i+6).equals(className) && (i==names.size()-1)) { 
                         // Remember to Fix this later 
-                        p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
-                    }
-                    else 
-                        p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
-                }
+                        
+                                p1.println();
+                                p1.println("      " + specialnames.get(i) + "(&__" + plainClassName + "::" + specialnames.get(i) + "){"); 
                     
+                    
+                    }
+                    
+                    
+                    // Finally Add Parameters Here 
+                    else {
+                        if ( parameters.get(specialnames.get(i)).equals("ZeroParams")){
+
+                        p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
+                        p1.println();
+                        }
+                        else { 
+                            ArrayList<Integer> getTheParameters = new ArrayList<Integer>();
+                            
+                            p1.print("      "   + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + ",");
+                            
+                            Pattern pp = Pattern.compile("\\$");    
+                            
+                            Matcher mm = pp.matcher(parameters.get(specialnames.get(i))); 
+                            
+                            while (mm.find()) { 
+                                
+                                getTheParameters.add(mm.start());
+                                
+                            }
+                            
+                            for ( int cc = 0; cc < getTheParameters.size(); cc++ ) { 
+                                
+                                
+                                if ( cc != getTheParameters.size()-1) {
+                                    
+                                    p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, getTheParameters.get(cc+1)) + ","); 
+                                    
+                                    
+                                }
+                                else {
+                                    int length = parameters.get(specialnames.get(i)).length();
+                                    p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, length));
+                                    p1.print("))" + "&" + checkForOtherSuperClass.get(i+6) + "::" + specialnames.get(i) + "),");
+                                    p1.println();
+                                }
+                                
+                            }
+                            
+                            
+                            //p1.println(getTheParameters);
+                        }                                    
+
+                            
+                }
+                        
+                        
+                    }       
+                        
+                
             p1.println("    }");
             p1.println("};"); 
             p1.println();
             p1.println();
             p1.println();
-               
+           } 
                 /*Remove comments below to Debug**/
                 //p1.println(names);
-            }
             
+    
             p1.println("}");
             p1.println("}");
             p1.flush();
