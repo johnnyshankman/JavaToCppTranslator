@@ -199,6 +199,7 @@ public class Translator extends xtc.util.Tool {
         		ASTConverter ccConverter = new ASTConverter(astArray[i], layout, table, runtime.console() );
         		ccConverter.createCCTree();
         		GNode ccAst = ccConverter.getCCTree();
+                CreateMethodBodies methodBodyCreator = new CreateMethodBodies(ccAst);
         		runtime.console().format(ccAst).pln().flush();
         	}
         }
