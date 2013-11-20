@@ -11,7 +11,10 @@ import xtc.type.*;
 
 import xtc.lang.JavaEntities;
 
+import xtc.Constants;
+
 import xtc.util.SymbolTable;
+import xtc.util.SymbolTable.Scope;
 import xtc.util.Runtime;
 
 import java.io.BufferedWriter;
@@ -77,19 +80,57 @@ public class ASTConverter extends Visitor {
 	
 ///////////************** THE MEAT ///////////************** ///////////************** THE MEAT ///////////************** ///////////************** THE MEAT ///////////**************
 	
-	public void createCCTree() 
+	public GNode createCCTree() 
 	{
 		ccComplete = GNode.create("Classes");
 		new Visitor()
 		{
+			public void visitPackageDeclaration(final GNode n) 
+			{
+				final String canonicalName = null == n ? "" : (String) dispatch(n.getNode(1));
+			    final PackageT result = JavaEntities.canonicalNameToPackage(table, canonicalName);
+			    table.enter(JavaEntities.packageNameToScopeName(canonicalName));
+			}
+			
+			public final String visitQualifiedIdentifier(final GNode n) 
+			{
+			    // using StringBuffer instead of Utilities.qualify() to avoid O(n^2)
+			    // behavior
+			    final StringBuffer b = new StringBuffer();
+			    for (int i = 0; i < n.size(); i++) {
+			      if (b.length() > 0)
+			        b.append(Constants.QUALIFIER);
+			      b.append(n.getString(i));
+			    }
+			    return b.toString();
+			}
+			
+			public void visitCompilationUnit(GNode n) 
+			{
+			    if (null == n.get(0))
+			      visitPackageDeclaration(null);
+			    else
+			      dispatch(n.getNode(0));
+
+			    table.enter(n);
+			    //runtime.console().p("Entered scope ").pln(table.current().getName()).flush();
+			    
+			    for (int i = 1; i < n.size(); i++) {
+			      GNode child = n.getGeneric(i);
+			      dispatch(child);
+			    }
+
+			    table.setScope(table.root());
+			}
+			
 			/*
 			 * calls the method which translates our class body
 			 */
 			public void visitClassDeclaration(GNode n)
 			{
 				ccTree = n;
-				currentClassName = n.get(1).toString();
-				translateClassBody(n);
+				currentClassName = ccTree.get(1).toString();
+				ccTree = translateClassBody(ccTree);
 				ccComplete.add(ccTree);
 			}
 			
@@ -107,6 +148,8 @@ public class ASTConverter extends Visitor {
 			}
 			
 		}.dispatch(javaTree);
+		
+		return ccComplete;
 	}
 	
 	
@@ -115,11 +158,12 @@ public class ASTConverter extends Visitor {
 	 * @param n GNode classDeclaration node for the class body we want to translate
 	 * 
 	 */
-	public void translateClassBody(GNode n)
+	public GNode translateClassBody(GNode n)
 	{
 		GNode ccTree = n;
-		//HELP: do i need to add the import declaration on to the top of the CC tree (right here) so that the first line of the .cc file is the import header.h statement?
-		buildImplementation(ccTree); //this will create all the code to create one gigantic .cc file (with one import statement for the gigantic header.h file we've already made i think)
+		ccTree = buildImplementation(ccTree); //this will create all the code to create one gigantic .cc file (with one import statement for the gigantic header.h file we've already made i think)
+		return ccTree;
+		
 	}
 	
 	
@@ -146,12 +190,70 @@ public class ASTConverter extends Visitor {
 			
 			/*
 			 * Simply here to globally grab the explicit "this" parameter for use later
+			 * also for correctly entering into the symbol table
 			 * @param n GNode a classDeclaration node
 			 */
 			public void visitClassDeclaration(GNode n) 
 			{
 				thisClass = n.getString(1);
+				table.enter(n);
 				visit(n);
+				table.exit();
+			}
+			/*
+			 * This will explicitly replace the PrimaryIdentifier node with a SelectrionExpression node 
+			 * for any class level variables. It will then proceed to add a ThisExpression node
+			 * to said SelectionExpression node.
+			 * 
+			 * I want every class level variable to be referred to ass "this->variableName" because it will
+			 * never break our code, but will always ensure that assignments between local+class variables
+			 * will behave as we expect them to.
+			 * 
+			 */
+			public void visitPrimaryIdentifier(GNode n) 
+			{
+				 String name = n.getString(0);
+				 if (table.current().isDefined(name)) 
+				 {
+				      Type type = (Type) table.current().lookup(name);
+				      if (JavaEntities.isLocalT(type))
+				      {
+				    	  //console.p("Found occurrence of local variable ").p(name).pln("... not doing anything!").flush();
+				    	  //do nothing
+				      }
+				      else if(JavaEntities.isParameterT(type))
+				      {
+				    	  //console.p("Found occurrence of parameter variable ").p(name).pln("... not doing anything!").flush();
+				    	  //do nothing
+				      }
+				      else //(isNonLocalT(type) = true)
+				      {
+				    	  console.p("Found occurrence of class-level variable ").p(name).pln("... replacing it with an expression node!").flush();
+				    	  console.pln("BEFORE:").format(n).pln().flush();
+				    	  //GNode selectionExpression = GNode.create("SelectionExpression"); //must change primary identifier to selection expression
+				    	  //n = selectionExpression;
+				    	  //GNode thisExpression = GNode.create("ThisExpression"); //create blank this expression
+				    	  //thisExpression.add(null); //only child of thisexpression is null
+				    	  //n.add(thisExpression);
+				    	  //n.add(name);
+				    	  
+				    	  
+				    	  /*
+				    	   * WORKING WORK AROUND... THE ABOVE CODE IS WHAT I WANT TO WORK
+				    	   */
+				    	  GNode thisExpression = GNode.create("ThisExpression"); //create blank this expression
+				    	  thisExpression.add(name); //only child of thisexpression is null	
+				    	  
+				    	  n.set(0, thisExpression); //add the ThisExpression as 0th child of SelectionExpression
+				    	  //add String name as 1st child of SelectionExpression
+				    	  console.pln("AFTER:").format(n).pln().flush();
+				      }
+				 }
+				 else //variable is not in symbol table this is very bad mmmk?
+				 {
+					 //do nothing, this else statement should never happen!
+					 console.p("Found occurrence of weirdo primary identifier... uh oh..!").p(name).pln("... still not doing anything!").flush();
+				 }
 			}
 			
 			/*
@@ -162,7 +264,7 @@ public class ASTConverter extends Visitor {
 				// Set the global variable for separate tree traversal: 
 				currentExpressionStatement = n;
 				visit(n);
-			}	
+			}
 			
 			/*
 			 * This is a monster... it chooses which methods get called at any given invocation and also translates System.out methods into C++ stdout stuff
@@ -186,7 +288,8 @@ public class ASTConverter extends Visitor {
 				    if("System".equals(primaryIdentifier)) 
 				    {
 				    	// Changes any "+" into a "<<"
-				    	new Visitor () {
+				    	new Visitor () 
+				    	{
 						
 				    		public void visitAdditiveExpression(GNode n) 
 				    		{
@@ -199,18 +302,18 @@ public class ASTConverter extends Visitor {
 				    			visit(n);
 				    		}
 									
-					    public void visit(GNode n) 
-					    {
-					    	for( Object o : n) 
-					    	{
-					    		if (o instanceof Node) dispatch((GNode)o);
-					    	}
-					    }
+				    		public void visit(GNode n) 
+				    		{
+				    			for( Object o : n) 
+				    			{
+				    				if (o instanceof Node) dispatch((GNode)o);
+				    			}
+				    		}
 									
-					}.dispatch(n); // end Visitor
+				    	}.dispatch(n); // end Visitor
 					
-						//HANDLER FOR "SYSTEM.OUT.PRINTLN"
-						if("println".equals(n.getString(2))) 
+				    	//HANDLER FOR "SYSTEM.OUT.PRINTLN"
+				    	if("println".equals(n.getString(2))) 
 						{
 							GNode strOut = GNode.create("StreamOutputList");
 							strOut.add(0, GNode.create("PrimaryIdentifier").add(0, "std::cout"));
@@ -219,13 +322,10 @@ public class ASTConverter extends Visitor {
 							{
 								// HACK : check if primaryidentifer.get(0) == null
 								if(GNode.test(n.getNode(3).get(i)) && null == n.getNode(3).getNode(i).get(0)) 
-								{
-									
+								{	
 								} 
 								else 
 								{
-									// standard behavior
-									// removed addindex 1
 									strOut.add(n.getNode(3).get(i) ); 
 								}				
 							}
@@ -252,7 +352,7 @@ public class ASTConverter extends Visitor {
 									
 				    }// end if "System"
 				} // end if "SelectionExpression"
-				//PRIM IDENTIFIER HANDLER
+				//STANDARD PRIM IDENTIFIER STRUCTURE HANDLER
 				else if(n.getNode(0).hasName("PrimaryIdentifier"))
 				{
 				    primaryIdentifier = n.getNode(0).getString(0);	
@@ -268,16 +368,17 @@ public class ASTConverter extends Visitor {
 				    primID.add(0, superName); //add super's name to 0th child of the primitveIdentifier node
 				    n.set(0, primID); //overwrite the super expression with the custom made primitiveIdentifer node
 				}
-				
 				//DEFAULT/CATCH-ALL HANDLER
 				else 
 				{ 
 				    visit(n);
 				}
 				
+				
+				//SEPARATE ARGUMENTS HANDLER
 				if(n.size() >= 4 && n.getNode(3).hasName("Arguments")) 
 				{
-				    // Time to append arguments
+				    //append arguments
 				    GNode vtable = header.getVTable(thisClass); // for use in getVTMethod
 				    String methodName = n.getString(2); //for use in getVTMethod
 				    GNode vtm = header.getVTMethod(vtable, methodName); //FIXME: WRITE THIS GETTER METHOD + MAKE SURE IT WORKS!!!!
@@ -301,12 +402,10 @@ public class ASTConverter extends Visitor {
 					    
 				    	}
 
-				    }
-				    // Keep on visiting arguments?
+				    }// Keep on visiting arguments?
 
-				}
-				
-				//THIS IS THE MONSTER AHH, DECIDES WHAT GETS CALLED WHEN
+				}	
+				//THIS IS THE MONSTER AHH
 			}
 			
 			
@@ -333,12 +432,10 @@ public class ASTConverter extends Visitor {
 				    {
 				    	throwType = "Exception"; //just give it the general umbrella name "Exception" w/ no args
 				    }
-				    
 				    /*
 				     *  These lines collapse the node structure entirely b/c said structure is superfluous to our needs.
 				     *  NOTE: This removes any arguments to the Exception BUT this is all good because we don't support arguments. (java_lang.h never asks for parameters)
-				     */
-				    
+				     */    
 				    GNode tmp = GNode.create("QualifiedIdentifier");
 				    tmp.add(throwType); //only child of QualifiedIdentifier is the throw type
 				    n.set(0, tmp); //set the 0th child to the new collapsed version of the structure
@@ -346,17 +443,36 @@ public class ASTConverter extends Visitor {
 				visit(n);
 			}
 			
-			public void visitBlock(GNode n){
-				visit(n);
+			
+			/*
+			 * EXTRA SYMBOL TABLE STUFF BELOW
+			 * The rest of the following methods are included in order for proper entering into the symbol table
+			 * TODO: method declarations with no parameters are being incorrectly named. this causes blocks to throw an illegalstateexception
+			 * 		 to fix this i need to get rid of the "([] __this)" as the parameter someehow. also enter(n) is not working correctly
+			 * 		 and thusly i am forced to continue using odd ways of entering the symbol table... my marking must not be working correctly.
+			 * 		 (ex: entering the table at method declarations)
+			 */
+			public void visitBlock(GNode n) 
+			{
+				table.enter(n);
+			    visit(n);
+			    table.exit();
 			}
 			
-			public void visitExpression(GNode n){
+			public void visitForStatement(GNode n) 
+			{
+				table.enter(n);
 				visit(n);
+				table.exit();
 			}
-			
+			  
+			public void visitMethodDeclaration(GNode n) 
+			{
+				table.enter(n);
+				visit(n);
+				table.exit();
+			}
 		}.dispatch(n);
-		
-		
 		
 		return n; //return the ccTree!!!! YAY!!
 	}
@@ -481,12 +597,9 @@ public class ASTConverter extends Visitor {
 		    }.dispatch(n));
 
 		if(isCT != null) return true;
-		return false;
 		
-
+		return false;
 	    }
-	
-	
 ///////////************** GETTER METHODS ///////////************** ///////////************** GETTER METHODS ///////////************** ///////////************** GETTER METHODS ///////////**************
 	
 	/*
