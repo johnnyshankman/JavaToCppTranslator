@@ -192,15 +192,18 @@ public class Translator extends xtc.util.Tool {
         
         runtime.console().pln("Translating body...\n").pln().pln().pln().flush();
         
+        GNode [] ccAstArray = new GNode [50];
+        
+        runtime.console().pln("Translating body...\n").pln().pln().pln().flush();  
+        
         for(int i=0 ; i<astArray.length ; i++)
         {
         	if(astArray[i]!=null)
         	{
         		ASTConverter ccConverter = new ASTConverter(astArray[i], layout, table, runtime.console() );
-        		ccConverter.createCCTree();
-        		GNode ccAst = ccConverter.getCCTree();
-                CreateMethodBodies methodBodyCreator = new CreateMethodBodies(ccAst);
-        		runtime.console().format(ccAst).pln().flush();
+        		ccAstArray[i] = ccConverter.createCCTree();
+        		//ccAstArray[i] = ccConverter.getCCTree();
+        		runtime.console().format(ccAstArray[i]).pln().flush();
         	}
         }
         
