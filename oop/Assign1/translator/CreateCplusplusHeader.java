@@ -255,6 +255,14 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             final List<Integer> indexx = new ArrayList<Integer>();
             
             final HashMap<Integer, String> checkForOtherSuperClass = new HashMap<Integer, String>(); 
+               
+               
+            // Basically You need to consider this fact there will be however so many Constructors and you need to keep a tally to start it like that and    
+            // Ignore those indices    
+               
+               
+             final  List<Integer> constuctorIndex = new ArrayList<Integer>();  
+               
             // Lets find out which methods are unique 
             new Visitor() {
                 public int counter = 0; 
@@ -271,7 +279,10 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     counter++;
                     
-                    if( !(n.getNode(1).getString(1).equals("__Object")) && !(n.getString(0).equals("main$String"))) { 
+                    if( !(n.getNode(1).getString(1).equals("__Object")) && !(n.getString(0).equals("main$String")) && !(n.getString(0).substring(0,1).equals("C"))) { 
+                        
+                        
+                      //  constructorIndex.add(counter);
                         
                         /*Remove comments below to Debug**/
                         //  p1.println(n.getString(0)); 
@@ -280,7 +291,11 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                         names.add(n.getString(0)); 
                         // There needs to be a check for the other than __Object && __SuperClass 
                         checkForOtherSuperClass.put(counter, n.getNode(1).getString(1)); 
+                       
                         
+                    
+                    
+                    
                     }   
                     
                     else 
