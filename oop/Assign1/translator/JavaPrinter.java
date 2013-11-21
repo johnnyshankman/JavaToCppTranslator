@@ -555,7 +555,7 @@ public class JavaPrinter extends Visitor {
   
   /** Visit the specified method declaration. */
   public void visitMethodDeclaration(GNode n) {
-
+    printer.p("__").p(classopener);
     printer.indent().p("::");
 
 
@@ -571,7 +571,7 @@ public class JavaPrinter extends Visitor {
       else {
     
         printer.p(parts[0]).p(" ");
-    printer.p(n.getNode(4)).p("{");
+    printer.p("here").p(n.getNode(4)).p("{");
       
     }} 
 
@@ -608,9 +608,11 @@ public class JavaPrinter extends Visitor {
     printer.p(n.getNode(5));
   }
   
+  String classopener;
+
   /** Visit the specified class declaration. */
   public void visitClassDeclaration(GNode n) {
-    printer.indent().p("__").p(n.getString(1));
+    classopener = (n.getString(1));
 
     
 
@@ -1406,7 +1408,9 @@ public class JavaPrinter extends Visitor {
 
   /** Visit the specified primitive type. */
   public void visitPrimitiveType(GNode n) {
-    printer.p(n.getString(0));
+    if (n.getString(0).equals("int")){
+      printer.p("int32_t");
+    }
   } 
 
   /** Visit the secified reference type. */
