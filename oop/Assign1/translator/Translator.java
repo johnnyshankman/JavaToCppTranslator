@@ -208,7 +208,9 @@ public class Translator extends xtc.util.Tool {
         }
         
         
-        
+        new JavaPrinter(runtime.console()).dispatch(node);
+       
+        runtime.console().flush();
         
         runtime.console().pln("Siphoning output to .cc files...").pln().pln().pln().flush();
           
