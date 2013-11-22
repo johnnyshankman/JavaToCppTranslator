@@ -94,6 +94,7 @@ public class InheritanceHandler extends Visitor {
 		//Building the vtables and data layout via Parents layout
 		currentHeaderNode = inheritParentHeader((GNode)parent.getNode(0)); //inherit parent header
 		visit(n); //visit every child of this class this will fill in the rest of the header
+		//currentHeaderNode.add( arrayHandler(n) );
 		newClassNode.add(currentHeaderNode); //add the header to the newClassNode
 		newClassNode.setProperty( "parentClassNode", parent); //set property 'parentClassNode' to the parent GNode from before, can get list of each nodes properties at any time, it's in the Node class's methods
 		parent.addNode(newClassNode); //add child as the child of the parent node 
@@ -153,7 +154,7 @@ public class InheritanceHandler extends Visitor {
 		GNode virtualTable = GNode.create("VTableDeclaration");
 		//children in order:
 		//0 add __isa
-		//1 add __delete
+		//1 add __delete/destructor
 		//2 add hashcode
 		//3 add equals
 		//4 add getClass
@@ -401,6 +402,7 @@ public class InheritanceHandler extends Visitor {
 		//n.set(5, n.getNode(5).add(classStaticVars) );
 		GNode constructorNode = GNode.create("ConstructorHeader");
 		constructorNode.add( n.get(2) ); //name of constructor
+		console.p( "YO" ).pln().flush();
 		constructorNode.add( n.get(3) ); //append formal params
 		currentHeaderNode.add(constructorNode);//put the constructor on the Vtable
 		
@@ -686,7 +688,7 @@ public class InheritanceHandler extends Visitor {
 		childDataLayout.set(2, constructorList);//clear out the constructor list
 		GNode statMethList = (GNode)childDataLayout.getNode(3);
 		for( Object o : statMethList ) { //changing the 'this' parameter types in the static data layout methods
-			console.format((GNode)o).flush();
+			//console.format((GNode)o).flush();
 			((GNode)o).getNode(2).set(0, className); //ugh is that ugly or what?
 		}
 		
@@ -861,7 +863,7 @@ public class InheritanceHandler extends Visitor {
     
     
     //creates a deep (NOT SHALLOW) copy of node n
-    GNode deepCopy(GNode n) {
+    static GNode deepCopy(GNode n) {
 		GNode deepCopy = (GNode) new Visitor() {
 			public Object visit(GNode n) {
 				GNode deepCopy = GNode.ensureVariable(GNode.create(n));
