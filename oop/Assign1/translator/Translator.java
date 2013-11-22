@@ -127,49 +127,64 @@ public class Translator extends xtc.util.Tool {
  
     if (runtime.test("translate")){
         runtime.console().pln("Begin translation...\n").flush();
-        runtime.console().pln("Finding and resolving dependencies...\n").flush();
         
+        
+        /*
+         * This finds and resolves all dependencies within the java file
+         * It basically looks up all the addresses of every file, then 
+         * quickly creates a java AST for each individual dependency.
+         * We will translate each individual java AST in a little while.
+         */
+        runtime.console().pln("Finding and resolving dependencies...\n").flush();
         GNode[] astArray = new GNode[50]; //arbitrary size
         astArray[0] = (GNode) node; //0th spot is the original java file's AST
         GetDependencies dependencyHandler = new GetDependencies();
         try{
-		astArray = dependencyHandler.getFile(); //store the array of java ASTs
+        	astArray = dependencyHandler.getFile(); //store the array of java ASTs
         }
-        catch (IOException e){
-        	
-        }
-        catch (ParseException e){
-        	
-        }
+        catch (IOException e){}
+        catch (ParseException e){ }
+        
 		astArray[0] = (GNode)node; //just to ensure we have the original java ast in slot 0 still
           
 		  
+		/*
+		 * This copies over every array so that we can always refer to 
+		 * an array that contains copies of the original unsimplified
+		 * java ASTs. This is needed so that inheritance handler works correctly.
+		 * We utilize InheritanceHandler's STATIC method deepCopy(GNode n) to 
+		 * make this happen correctly.
+		 */
+		GNode[] unsimplified = new GNode[50]; //create the blank array to hold unsimplified java ASTs
+		
+		for(int i = 0; i<unsimplified.length; i++){
+			unsimplified[i] = InheritanceHandler.deepCopy(astArray[i]); //create a deep copy of each java AST and store it in unsimplified
+		}
 		
 		
 		
-		
-		
-		
+		/*
+		 * This builds the symbol table using a simplified version of the
+		 * original java AST. This is for use in AST Converter.
+		 */
         runtime.console().pln("Building symbol table...\n").flush();
-        
-        
         new JavaAstSimplifier().dispatch((GNode)node);
         final SymbolTable table = new SymbolTable(); //empty symbol table
         new SymbolTableHandler(runtime, table).dispatch((GNode)node); //create the table
         table.current().dump( runtime.console() ); //print dump the table into console
         runtime.console().pln().pln().pln().flush();
-          
+         
         
         
         
         
-        
+        /*
+         * This creates the class hierarchy of data layouts and vtables.
+         * We run it on the unsimplified array to avoid losing
+         * our constructor header declarations!
+         */
         runtime.console().pln("Building vtables and data-layouts for C++ ASTs...\n").flush();
-        
-        
-        InheritanceHandler layout = new InheritanceHandler(astArray, runtime.console());
-        //done
-        
+        InheritanceHandler layout = new InheritanceHandler(unsimplified, runtime.console());
         runtime.console().format(layout.getClassTree()).pln().pln().pln().pln().flush();
         
         
@@ -178,49 +193,47 @@ public class Translator extends xtc.util.Tool {
      
         
 
-          
+        /*
+         * This creates our beautiful header.h file
+         * ASTConverter will make sure we #include it in the .cc file.  
+         */
         runtime.console().pln("Creating header file...\n").flush();
-        
         GNode createCplusplusHeader = layout.getClassTree();
         CreateCplusplusHeader getHeader = new CreateCplusplusHeader(createCplusplusHeader); 
-        
         runtime.console().pln("Header file can now be found in output directory.\n").pln().pln().pln().flush();
         
         
         
-        
-        
-        runtime.console().pln("Translating body...\n").pln().pln().pln().flush();
-        
-        GNode [] ccAstArray = new GNode [50];
-        
+        /*
+         * This translates the simplified java AST into C++
+         * The output of this will be printed in to the class.cc file!
+         */
         runtime.console().pln("Translating body...\n").pln().pln().pln().flush();  
-        
+        GNode [] ccAstArray = new GNode [50];        
         for(int i=0 ; i<astArray.length ; i++)
         {
         	if(astArray[i]!=null)
         	{
         		ASTConverter ccConverter = new ASTConverter(astArray[i], layout, table, runtime.console() );
-        		ccAstArray[i] = ccConverter.createCCTree();
-        		//ccAstArray[i] = ccConverter.getCCTree();
-        		runtime.console().format(ccAstArray[i]).pln().flush();
+        		ccConverter.createCCTree();
+        		ccAstArray[i] = ccConverter.getCCTree();
+        		//runtime.console().format(ccAstArray[i]).pln().flush();
         	}
         }
         
-        
-        new JavaPrinter(runtime.console()).dispatch(node);
-       
-        runtime.console().flush();
-        
+      
+        /*
+         * This is where we will create the .cc file with correct C++ syntax.
+         * Final step woohoo!
+         */
         runtime.console().pln("Siphoning output to .cc files...").pln().pln().pln().flush();
-          
-        
-        
-        
+        new JavaPrinter(runtime.console()).dispatch(node);  
+        runtime.console().flush();
+     
         
         
         runtime.console().pln("... the translation is now finished! Please check src/oop/output for your translated files. \n").flush();
-
+	
        
       
       }
