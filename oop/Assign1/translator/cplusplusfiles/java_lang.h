@@ -74,6 +74,9 @@ namespace java {
 
       // The constructor.
       __Object();
+ 
+    // The destructor.
+    static void __delete(__Object*);
 
       // The methods implemented by java.lang.Object.
       static int32_t hashCode(Object);
@@ -92,6 +95,7 @@ namespace java {
     // The vtable layout for java.lang.Object.
     struct __Object_VT {
       Class __isa;
+      void (*__delete)(__Object*);
       int32_t (*hashCode)(Object);
       bool (*equals)(Object, Object);
       Class (*getClass)(Object);
@@ -99,6 +103,7 @@ namespace java {
 
       __Object_VT()
       : __isa(__Object::__class()),
+        __delete(&__Object::__delete),
         hashCode(&__Object::hashCode),
         equals(&__Object::equals),
         getClass(&__Object::getClass),
@@ -116,6 +121,9 @@ namespace java {
 
       // The constructor;
       __String(std::string data);
+
+     // The destructor.
+      static void __delete(__String*);
 
       // The methods implemented by java.lang.String.
       static int32_t hashCode(String);
@@ -135,6 +143,7 @@ namespace java {
     // The vtable layout for java.lang.String.
     struct __String_VT {
       Class __isa;
+      void (*__delete)(__String*);
       int32_t (*hashCode)(String);
       bool (*equals)(String, Object);
       Class (*getClass)(String);
@@ -144,6 +153,7 @@ namespace java {
       
       __String_VT()
       : __isa(__String::__class()),
+        __delete(__String::__delete),
         hashCode(&__String::hashCode),
         equals(&__String::equals),
         getClass((Class(*)(String))&__Object::getClass),
@@ -169,6 +179,9 @@ namespace java {
               Class component = (Class)__rt::null(),
               bool primitive = false);
 
+     // The destructor.
+     static void __delete(__Class*);
+
       // The instance methods of java.lang.Class.
       static String toString(Class);
       static String getName(Class);
@@ -189,6 +202,7 @@ namespace java {
     // The vtable layout for java.lang.Class.
     struct __Class_VT {
       Class __isa;
+      void (*__delete)(__Class*);
       int32_t (*hashCode)(Class);
       bool (*equals)(Class, Object);
       Class (*getClass)(Class);
@@ -202,6 +216,7 @@ namespace java {
 
       __Class_VT()
       : __isa(__Class::__class()),
+        __delete(&__Class::__delete),
         hashCode((int32_t(*)(Class))&__Object::hashCode),
         equals((bool(*)(Class,Object))&__Object::equals),
         getClass((Class(*)(Class))&__Object::getClass),
@@ -319,6 +334,7 @@ namespace __rt {
     typedef Array<T>* Reference;
 
     java::lang::Class __isa;
+    void (*__delete)(Array<T>*);
     int32_t (*hashCode)(Reference);
     bool (*equals)(Reference, java::lang::Object);
     java::lang::Class (*getClass)(Reference);
@@ -326,6 +342,7 @@ namespace __rt {
     
     Array_VT()
     : __isa(Array<T>::__class()),
+      __delete(&Array<T>::__delete),
       hashCode((int32_t(*)(Reference))
                &java::lang::__Object::hashCode),
       equals((bool(*)(Reference,java::lang::Object))
@@ -341,8 +358,6 @@ namespace __rt {
   // no-arg constructor.
   template <typename T>
   Array_VT<T> Array<T>::__vtable;
-
-  // But where is the definition of __class()???
 
   // ========================================================================
 
