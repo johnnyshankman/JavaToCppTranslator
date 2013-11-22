@@ -78,5 +78,6 @@ patchxtc:
 	cd xtc/lang; \
 	ls; \
 	patch JavaExternalAnalyzer.java JavaExternalAnalyzer.patch; \
-	rm JavaExternalAnalyzer.patch;\
-	rm JavaExternalAnalzyerPatch.java
+    cd ../.. ; \
+    make clean; \
+    mkae
