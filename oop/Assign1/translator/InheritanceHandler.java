@@ -252,8 +252,15 @@ public class InheritanceHandler extends Visitor {
 	
 	///////////************** FIELD HANDLING
 	
-	public void visitFieldDeclaration(GNode n){
-		
+	/*
+	 * Handles any field declaration and then adds it to the data layout
+	 * according to what type of declaration it is. If it's static we simply
+	 * add it to the classStaticVars list. If it is not we check for overriding
+	 * and handle that. Otherwise, it's a normal field and we simply add it in 
+	 * a standard fashion to the data layout etc.
+	 */
+	public void visitFieldDeclaration(GNode n)
+	{
 		/* 
 		 * create new a data layout for that field declaration 
 		 * override to determine if field is in layout or not, override index...
@@ -261,22 +268,24 @@ public class InheritanceHandler extends Visitor {
 		 * just create DATA LAYOUT
         **/
 		
-		//static vars don't get initialized in the data layout, they are added to classStaticVars
-		if ( isStatic( (GNode)n.getNode(0) ) ){		//if method is static, add to classStaticVars
-			classStaticVars.add( (GNode)n.getNode(2) );
-			n.getNode(2).getNode(2).set(2, null); //sets location to null 
+		//if variable is static then we add it to class static vars
+		//other wise we add it correctly to the virtual layout etc
+		if ( isStatic( (GNode)n.getNode(0) ) )
+		{
+			classStaticVars.add( (GNode)n.getNode(2) ); //add it to class static vars
+			n.getNode(2).getNode(0).set(1, null); //ensures location is null 
 		}
 		
 		//set overriddenMethodIndex 
 		int overridenFieldIndex = indexOfOverridingField(n, (GNode)currentHeaderNode.getNode(1).getNode(1) );
 		
-		if ( overridenFieldIndex >= 0 ) {
-			//if field needs to be overriden, use .set() to override field at specified index
-			currentHeaderNode.getNode(1).getNode(1).set(overridenFieldIndex, n);
+		if ( overridenFieldIndex >= 0 ) 
+		{
+			currentHeaderNode.getNode(1).getNode(1).set(overridenFieldIndex, n); //if field needs to be overriden, use .set() to override field at specified index
 		}
-		else {
-			//if field won't be overriden, add as regular field using .add()
-			currentHeaderNode.getNode(1).getNode(1).add(n);
+		else 
+		{	
+			currentHeaderNode.getNode(1).getNode(1).add(n); //if field won't be overriden, add as regular field using .add()
 		}
 	}
         
