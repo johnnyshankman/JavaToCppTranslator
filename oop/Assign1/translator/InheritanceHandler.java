@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
-
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Iterator;
@@ -94,7 +93,8 @@ public class InheritanceHandler extends Visitor {
 		//Building the vtables and data layout via Parents layout
 		currentHeaderNode = inheritParentHeader((GNode)parent.getNode(0)); //inherit parent header
 		visit(n); //visit every child of this class this will fill in the rest of the header
-		//currentHeaderNode.add( arrayHandler(n) );
+		GNode customArrays = findArrays(n);
+		currentHeaderNode.addNode(customArrays);
 		newClassNode.add(currentHeaderNode); //add the header to the newClassNode
 		newClassNode.setProperty( "parentClassNode", parent); //set property 'parentClassNode' to the parent GNode from before, can get list of each nodes properties at any time, it's in the Node class's methods
 		parent.addNode(newClassNode); //add child as the child of the parent node 
@@ -402,7 +402,6 @@ public class InheritanceHandler extends Visitor {
 		//n.set(5, n.getNode(5).add(classStaticVars) );
 		GNode constructorNode = GNode.create("ConstructorHeader");
 		constructorNode.add( n.get(2) ); //name of constructor
-		console.p( "YO" ).pln().flush();
 		constructorNode.add( n.get(3) ); //append formal params
 		currentHeaderNode.add(constructorNode);//put the constructor on the Vtable
 		
@@ -884,10 +883,304 @@ public class InheritanceHandler extends Visitor {
     }
     
     
+    ///////////************** ARRAY SPECIALIZATION/TEMPLATE HANDLING ///////////************** ARRAY SPECIALIZATION/TEMPLATE HANDLING ///////////************** ARRAY SPECIALIZATION/TEMPLATE HANDLING
+    
+    
+    GNode customClasses = GNode.create("CustomClasses");
+    GNode templateNodes = GNode.create("ArrayTemplates");
+    // Need to add these in proper namespaces
+    GNode primStructs = GNode.create("Declaration");
+    GNode primTypes = GNode.create("PrimitiveTYPES");
+    boolean isArray = false;
+    int dim;
+    String qID;
+    
+    
+    /*
+     * This bad ass mofo finds every array and creates the AST for
+     * the array template specialization code. We have some global
+     * variables to help us do this more easily (they are declard above)
+     * 
+     * @return returns a
+     */
+    public GNode findArrays(GNode n) 
+    {
+		
+    	final GNode classDeclaration = n;
+
+		new Visitor() 
+		{
+			/*
+			 * This is our meat.
+			 * We visit the Field and recurse through it's children to determine whether or not
+			 * this field is actually an array.
+			 * 
+			 * Once we know it is an array, we grab all the info we need in order to print out
+			 * the array template specialization code for that type of array. We visit all arrays
+			 * and then declare a struct for each individual TYPE of array we find, not each acutal array.
+			 */
+		    public void visitFieldDeclaration(GNode n) 
+		    {
+				
+				// Immediately visit down to see if it's an array.
+				visit(n);
+							
+				if(isArray) 
+				{
+				    // FU Grimm! short a2[] = new short[2];
+				    normalizeArray(n);
+		
+				    GNode newArrayExpression = (GNode) n.getNode(2).getNode(0).getNode(2);
+		
+				    // get Dimensions
+				    String dims = newArrayExpression.getNode(1).getNode(0).getString(0);
+				    dim = Integer.parseInt(dims);
+		
+				    // get Type/qID
+				    qID = newArrayExpression.getNode(0).getString(0);
+		
+				    //get all the prim struct/type stuff
+				    if(isPrimitive(qID) && !"int".equals(qID)) 
+				    {
+				
+						// Add nodes for TYPE and struct declarations
+						GNode primStruct = GNode.create("PrimitiveStruct");
+						String type =  qID.substring(0,1).toUpperCase() + qID.substring(1).toLowerCase();
+						
+						primStruct.add(createTypeGNode(type));
+						primStructs.add(primStruct);
+			
+			
+						GNode primType = GNode.create("PrimitiveTYPE");
+						primType.add(createTypeGNode(type));
+						String lc = type.toLowerCase();
+						primType.add(createTypeGNode(lc));
+						primTypes.add(primType);
+			
+			
+				    }
+				    
+				    //quickly make a node to hold the parent's type
+				    GNode parent = GNode.create("ParentType");
+				    
+					//grab the parent's type info
+				    //primitive types dont have super classes so ignore those
+				    if(dim > 1 || isCustomType(classDeclaration, qID)) 
+				    {	
+						if(!isPrimitive(qID)) 
+						{
+						    String pID = getSuperclassName(qID);
+						    parent.add(createTypeGNode(pID));
+						}
+				    } 
+				    
+				    
+				    //create a nice component node
+				    GNode component = GNode.create("ComponentType");
+				    component.add(createTypeGNode(qID));
+					
+				    // FIXME: Add ['s to denote dimensions?
+				    GNode templateNode = GNode.create("ArrayTemplate");
+				    
+				    
+				    if(isPrimitive(qID)) //if primitive
+				    {
+				    	templateNode.add(component); // that's all you need to memset
+				    }
+				    else //if not primitive then we've got ourselves a custom class!
+				    {
+						// Customize __class()
+						GNode customClass = GNode.create("CustomClass");
+						customClass.add(parent);
+						customClass.add(component);
+						customClasses.add(customClass);
+						    
+						// Specialize Template
+						// Note: templateNodes is NOT already in the tree
+						templateNode.add(parent);
+						templateNode.add(component);
+			
+				    }
+				    templateNodes.add(templateNode);
+		
+				    // reset boolean when done.
+				    isArray = false;
+				    
+				} // end isArray
+	       		
+		    } // end visitFieldDeclaration
+			
+		    /*
+		     * Quickly sets the boolean isArray to true
+		     * This gets called in visitFieldDeclaration when we call visit(n)
+		     * If we never hit an array expression the field is a normal field
+		     * so we don't do anything. If it's an array we enter the array handler.
+		     */
+		    public void visitNewArrayExpression(GNode n) 
+		    {
+		    	isArray = true;
+		    }
+		    
+		    /*
+		     * Standard GNode visit
+		     */
+		    public void visit(GNode n) 
+		    {
+		    	for( Object o : n) 
+		    	{
+		    		if (o instanceof Node) dispatch((GNode)o);
+		    	}
+		    }
+				
+		}.dispatch(n);
+		
+		
+		//if we dont have any customClasses set it to null
+		if(customClasses == null)
+		{
+				customClasses = null;
+		}
+		
+		
+		//add all the custom classes as children of the Declaration node
+		GNode customs = GNode.create("CustomArrayDeclaration", customClasses);
+		return customs;
+		
+    } // end findArrays
     
     
     
     
+    /*
+	 * Checks if the name (string) held in "Type" node is Object, String, or Class
+	 * @param s String A String holding the type
+	 * @return b boolean false when the name is "String", "Object" or "Class"
+	 */
+	public boolean isCustomName(String s) 
+	{
+		if("String".equals(s) || "Object".equals(s) || "Class".equals(s)) 
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/*
+	 * Checks whether the type of a certain node is custom (!= to Object, Class, String, etc)
+	 * @param n GNode a classDeclaration node
+	 * @param s String a string contianing the name of the primary identifier
+	 * NOTE: This is an exact copy of a method by the same name that is in ASTConverter... 
+	 * i guess i could make that method static and use it here but for right now this is way simpler
+	 * and quicker to get up and running.
+	 */
+	boolean isCustomType(GNode n, String s) 
+	{	
+			final String p = s; //p = primary identifier
+			
+			GNode isCT = (GNode) (new Visitor() 
+			{
+				public GNode visitDeclarator(GNode n) 
+				{
+				    if( p.equals(n.getString(0)) ) // We found where the primary identifier is declared to get Type
+				    {
+				    	String type;
+				    	if(n.getNode(2).hasName("Type")) 
+				    	{
+				    		type = n.getNode(2).getNode(2).getString(0);
+				    	}
+						else if(n.getNode(2).hasName("NewClassExpression")) 
+						{
+						    type = n.getNode(2).getNode(2).getString(0);
+						}
+						else if(n.getNode(2).hasName("NewArrayExpression")) 
+						{
+						    type = n.getNode(2).getNode(0).getString(0);
+						}
+						else //we still haven't found the goddamn type!!!
+						{
+						    // Going down one more level should return Type node if we've gotten this far and haven't found it yet
+						    type = n.getNode(2).getNode(0).getNode(0).getString(0);
+						}
+				    	
+				    	//quickly check whether the name of the type we've found is technically custom
+				    	//if it is then we just return that node immediately, otherwise we'll exit, hit the visit, and keep searching until we do find one
+				    	if(isCustomName(type))
+				    	{
+					    return n;
+				    	}
+				    }
+				    
+				    // Keep Searching
+				    for( Object o : n) 
+				    {
+				    	if (o instanceof Node) 
+				    	{
+				    		GNode returnValue = (GNode)dispatch((GNode)o);
+				    		if( returnValue != null ) //if we've hit the isCustomName conditional and it has passed, then we return that custom type node
+				    			return returnValue; //returns the custom type node
+				    	}
+				    }
+				    return null; //otherwise there is no custom type, return value is null
+				}
+	
+	
+				public GNode visit(GNode n) 
+				{ 
+				    // Keep Searching
+				    for( Object o : n) 
+				    {
+						if (o instanceof Node) 
+						{
+						    GNode returnValue = (GNode)dispatch((GNode)o);
+						    if( returnValue != null ) return returnValue;
+						}
+				    }  
+				    return null;   
+				}
+				
+			    }.dispatch(n));
+	
+			if(isCT != null) return true;
+			
+			return false;
+	}
+	
+	/*
+	 * Checks whether a certain Type (provided as a string)
+	 * is considered primitive or not. returns true if the
+	 * type is indeed primitive.
+	 */
+	public boolean isPrimitive(String sc) {
+		// Should String really be here?
+		if (sc.equals("int") || sc.equals("boolean") || sc.equals("byte") || sc.equals("short") || sc.equals("long") || sc.equals("float") || sc.equals("double") || sc.equals("char") || sc.equals("String") ) {
+			return true;
+		}
+		else 
+			return false;
+    }
+	
+	/*
+	 * Dimensions can be declared in multiple places in terms of java syntax
+	 * so this just normalizes the syntax so that the dimensions
+	 * are always found in the same place when we run findArrays(GNode n).
+	 * 
+	 * @param n a field declaration for an array
+	 */
+    public void normalizeArray(GNode n) 
+    {
+		if(null == n.getNode(1).get(1))
+		{
+		    // Must move Dimensions node
+		    GNode dims = (GNode) n.getNode(2).getNode(0).getNode(1);
+		    n.getNode(1).set(1, dims);
+	
+		    // now clear it out
+		    n.getNode(2).getNode(0).set(1, null);
+		}
+    }
+    
+   
     
 	///////////************** DEBUG
 	
