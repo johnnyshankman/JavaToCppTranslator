@@ -6,9 +6,9 @@
 
     $ make patchxtc
 
-    Then these commands to cleanly recompile xtc with the new patch:
+    This should not only patch the necessary files, but recompile all of src with a clean make.
+    If the make commands returned errors, simply return to the src directory and run the following commands to fix the problem.
 
-    $ cd ../..
     $ make clean
     $ make
     $ cd src/oop
