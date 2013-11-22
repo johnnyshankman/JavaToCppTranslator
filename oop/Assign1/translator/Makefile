@@ -80,4 +80,4 @@ patchxtc:
 	patch JavaExternalAnalyzer.java JavaExternalAnalyzer.patch; \
     cd ../.. ; \
     make clean; \
-    mkae
+    make
