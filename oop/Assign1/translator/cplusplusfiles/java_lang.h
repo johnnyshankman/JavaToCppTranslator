@@ -38,10 +38,7 @@ namespace java {
 
     // Forward declarations of data layout and vtables.
     struct __Object;
-    struct __Object_VT;
-      
-  //  struct __HelloWorld;
-  //  struct __HelloWorld_VT;   
+    struct __Object_VT;  
 
     struct __String;
     struct __String_VT;
@@ -51,10 +48,9 @@ namespace java {
 
     // Definition of type names, which are equivalent to Java semantics,
     // i.e., an instance is the address of the object's data layout.
-    typedef __Object* Object;
-    typedef __Class* Class;
-    typedef __String* String;
-   // typedef __HelloWorld* HelloWorld;
+    typedef __rt::Ptr<__Object> Object;
+    typedef __rt::Ptr<__Class> Class;
+    typedef __rt::Ptr<__String> String;
   }
 }
 
@@ -109,53 +105,7 @@ namespace java {
         toString(&__Object::toString) {
       }
     };
-
-    // ======================================================================
-    /*  
-      struct __HelloWorld { 
-          
-          // The data layout for java.lang.plainClassName
-          __HelloWorld_VT* __vptr;
-          
-          
-          
-          // The Constructor
-          
-          __HelloWorld(); 
-          
-          // The instance methods of java.lang.plainClassName
-          static bool goel( HelloWorld);
-          
-          static String toString( HelloWorld);
-          
-          // The Function returning the class Object representing java.lang.plainClassName 
-          static Class __class(); 
-          
-          static __HelloWorld_VT __vtable;
-          
-      };
-      
-      struct __HelloWorld_VT{
-          Class __isa;
-          int32_t (*hashCode)(HelloWorld);
-          bool (*equals)(HelloWorld,Object);
-          Class (*getClass)(HelloWorld);
-          String (*toString) (HelloWorld);
-          bool (*goel) (HelloWorld);
-          
-          
-          __HelloWorld_VT()
-          : __isa(__HelloWorld::__class()),
-          hashCode((int32_t(*)(HelloWorld))&__Object::hashCode),
-          equals((bool(*)(HelloWorld,Object)) &__Object::equals), 
-          getClass((Class(*)(HelloWorld)) &__Object::getClass), 
-          toString(&__HelloWorld::toString),
-          goel(&__HelloWorld::goel){
-              
-          }
-      };
-
-      **/
+ 
       
     // ======================================================================
 
@@ -335,6 +285,27 @@ namespace __rt {
       : __vptr(&__vtable), length(length), __data(new T[length]()) {
     }
 
+    // The destructor.
+    static void __delete(Array* __this) {
+      delete[] __this->__data;
+      delete __this;
+    }
+
+    // Array access.
+    T& operator[](int32_t idx) {
+      if (0 > idx || idx >= length) {
+        throw java::lang::ArrayIndexOutOfBoundsException();
+      }
+      return __data[idx];
+    }
+
+    const T& operator[](int32_t idx) const {
+      if (0 > idx || idx >= length) {
+        throw java::lang::ArrayIndexOutOfBoundsException();
+      }
+      return __data[idx];
+    }
+
     // The function returning the class object representing the array.
     static java::lang::Class __class();
 
@@ -392,7 +363,7 @@ namespace __rt {
     }
   }
 
-  // Template function to check array access is within bounds.
+  // Template function to check array access is within index bounds.
   template <typename T>
   void checkIndex(Array<T>* array, int32_t index) {
     if (0 > index || index >= array->length) {
@@ -400,7 +371,7 @@ namespace __rt {
     }
   }
 
-  // Template function to check array stores.
+  // Template function to check array stores (mis matched types etc).
   template <typename T, typename U>
   void checkStore(Array<T>* array, U object) {
     if (null() != (java::lang::Object) object) {
@@ -411,6 +382,20 @@ namespace __rt {
         throw java::lang::ArrayStoreException();
       }
     }
+  }
+
+ // ========================================================================
+
+  // Template function for java-like casts.
+  template <typename T, typename U>
+  T java_cast(U object) {
+    java::lang::Class k = T::value_t::__class();
+
+    if (! k->__vptr->isInstance(k, object)) {
+      throw java::lang::ClassCastException();
+    }
+
+    return T(object);
   }
 
 }
