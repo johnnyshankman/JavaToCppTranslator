@@ -29,6 +29,11 @@ namespace java {
     __Object::__Object() : __vptr(&__vtable) {
     }
 
+     // The Object destructor.
+    void __Object::__delete(__Object* __this) {
+      delete __this;
+    }
+
     // java.lang.Object.hashCode()
     int32_t __Object::hashCode(Object __this) {
       return (int32_t)(intptr_t)__this;
@@ -58,7 +63,7 @@ namespace java {
     // Internal accessor for java.lang.Object's class.
     Class __Object::__class() {
       static Class k =
-        new __Class(__rt::literal("java.lang.Object"), (Class)__rt::null());
+        new __Class(__rt::literal("java.lang.Object"), __rt::null());
       return k;
     }
 
@@ -72,6 +77,11 @@ namespace java {
     __String::__String(std::string data)
       : __vptr(&__vtable), 
         data(data) {
+    }
+
+    // The String destructor.
+    void __String::__delete(__String* __this) {
+      delete __this;
     }
 
     // java.lang.String.hashCode()
@@ -132,34 +142,13 @@ namespace java {
     // invokes the default no-arg constructor for __String_VT.
     __String_VT __String::__vtable;
 
-    // =======================================================================
-      
-      
-      
-      
-      
-      __HelloWorld::__HelloWorld() : __vptr(&__vtable) {}
-      
-      bool __HelloWorld::goel( HelloWorld __this) { 
-          return true; 
-      }
-      
-      Class __HelloWorld::__class() { 
-          
-          static Class k = new __Class(__rt::literal("java.lang.JavaClass"), __Object::__class()); 
-          return k; 
-      }
-      /*
-      String __HelloWorld::toString ( HelloWorld __this) { 
-          
-          return new __String("ANKIT");           
-      } 
-      **/
-      
-      __HelloWorld_VT __HelloWorld:: __vtable;
-      
-      
-      
+    //so that string output works correctly
+    std::ostream& operator<<(std::ostream& out, String s) {
+      out << s->data;
+      return out;
+    }
+
+    // =======================================================================      
       
     // java.lang.Class(String, Class)
     __Class::__Class(String name, Class parent, Class component, bool primitive)
@@ -168,6 +157,11 @@ namespace java {
         parent(parent),
         component(component),
         primitive(primitive) {
+    }
+
+    // The Class destructor.
+    void __Class::__delete(__Class* __this) {
+      delete __this;
     }
 
     // java.lang.Class.toString()
@@ -209,12 +203,10 @@ namespace java {
       Class k = o->__vptr->getClass(o);
 
       do {
-        if (__this->__vptr->equals(__this, (Object)k)) return true;
-
-        // FIXME: handle covariance of arrays
+        if (__this->__vptr->equals(__this, k)) return true;
 
         k = k->__vptr->getSuperclass(k);
-      } while ((Class)__rt::null() != k);
+      } while (__rt::null() != k);
 
       return false;
     }
@@ -253,7 +245,15 @@ namespace __rt {
     return value;
   }
 
-  // Template specialization for arrays of ints.
+   // Template specialization for arrays of ints.
+  template<>
+  Array<int32_t>::Array(const int32_t length)
+  : __vptr(&__vtable), length(length), __data(new int32_t[length]) {
+    std::memset(__data, 0, length * sizeof(int32_t));
+  }
+
+  // Other template specialization for arrays of ints?
+  // Do we still need this? I’m not quite sure.
   template<>
   java::lang::Class Array<int32_t>::__class() {
     static java::lang::Class k =
