@@ -119,7 +119,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
                 createCplusplusHeader = (GNode)stac.getNode(b); 
                 GNode vMethods = (GNode) createCplusplusHeader.getNode(0);
-                
+                //p1.println(vMethods.getName());
                 /*Remove comments below to Debug**/
                 // p1.println(vMethods.getName()); 
                 // We need a mapping of methodName to accessibility
@@ -131,7 +131,30 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 // p1.println(mNAccess);
                 // p1.println(mNAccess.get("goel")); 
             
+               final GNode constructorPrinter = GNode.create("ConstructorPrinter");
+            // Need another dispatch for constructor heeader node    
+               new Visitor() {
+                   public void visitConstructorHeader(GNode n ) { 
+                       
+                       // Add each node 
+                       constructorPrinter.add(n);
+                       
+                   }
+                   
+                   public void visit(Node n) {
+                       for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                   }
+                   
+               }.dispatch(createCplusplusHeader);
+              // p1.println(constructorPrinter.size());
             // Find out when the virtual method declarations ends 
+               
+               
+               
+               
+               
+               
+               
             final ArrayList<Integer> getCounter = new ArrayList<Integer>(); 
             new Visitor() {
                 int counter2 = 0; 
@@ -211,11 +234,13 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                    
                    public void visitFieldDeclaration(GNode n) { 
                       
-                       if (n.getNode(0).size() > 0 ) 
-                       privateOrpublic.add(n.getNode(0).getNode(0).getString(0));
+                       //if (n.getNode(0).size() > 0 ) 
+                       //privateOrpublic.add(n.getNode(0).getNode(0).getString(0));
                        
                        if ( n.getNode(1).getNode(0).getString(0).equals("int"))
                            PrimitiveType.add("int32_t"); 
+                       else 
+                           PrimitiveType.add(n.getNode(1).getNode(0).getString(0)); 
                        
                        Decl.add(n.getNode(2).getNode(0).getString(0)); 
                        
@@ -238,12 +263,65 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                    
                }
                
+                           
+               List<String> typeOfParameter = new ArrayList<String>(); 
+               List<String> DECLARATOR  = new ArrayList<String>();
+               
+               
+               
+               
+               //p1.println(constructorPrinter);
+               
+               for ( int ccd = 0; ccd < constructorPrinter.size(); ccd++) {   
+               
+                   // There is more than one parameter 
+                   if(constructorPrinter.getNode(ccd).getNode(1).size() >= 1) { 
+                       
+                       
+                       GNode GETPARAMS = GNode.create("GETPARAMS"); 
+                   
+                       
+                       GETPARAMS.add(constructorPrinter.getNode(ccd).getNode(1));
+                       //p1.println(GETPARAMS);
+                       // Now Go through the Formal Parameters 
+                       
+                       for ( int dcc = 0; dcc < GETPARAMS.size(); dcc++) { 
+                           
+
+                           
+                           typeOfParameter.add(GETPARAMS.getNode(0).getNode(dcc).getNode(1).getNode(0).getString(0));
+                          
+                          
+                           DECLARATOR.add(GETPARAMS.getNode(0).getNode(dcc).getString(3));
+                           
+                           
+                       }
+                   }   
+               }
+               
+               if ( DECLARATOR.size() >= 1 && typeOfParameter.size() >= 1) { 
+                   p1.print(className + "( ");
+                   for ( int goela = 0; goela < typeOfParameter.size(); goela++) { 
+                      
+                       if(goela != typeOfParameter.size()-1)
+                           p1.print( typeOfParameter.get(goela) + "   " + DECLARATOR.get(goela) + ",");
+                       else 
+                           p1.print( typeOfParameter.get(goela) + "   " + DECLARATOR.get(goela) + ");");
+                   }
+                   
+               }
+               
+               
             p1.println();
-            p1.println("     "   +  "// The Constructor"); 
-            p1.println();
-            p1.println("      " +  "__" + plainClassName + "(); "); 
-            p1.println();
-            
+               
+               if ( (constructorPrinter.size() == 0)) {  
+               p1.println();
+               p1.println("     "   +  "// The Constructor"); 
+               p1.println();
+               p1.println("      " +  "__" + plainClassName + "(); "); 
+               }
+               
+               
             //Find Instance Methods of the class Basically go through vtMethodPointersList and 
             //  go through its children and check if the qualified identifier is the same as the clas name 
             
@@ -265,7 +343,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                final  GNode constructors = GNode.create("CONSTRUCTOR"); 
                final String constructorNameGetter = plainClassName; 
              //  p1.println(constructors.size());
-               p1.println(constructorNameGetter);
+               //p1.println(constructorNameGetter);
             // Lets find out which methods are unique 
                
             new Visitor() {
@@ -317,6 +395,9 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 }
                 
             }.dispatch(vMethods);
+               
+               
+            
               // p1.println(names);
              //  p1.println("Constructors" + constructors.size()); 
              //  p1.println(checkForOtherSuperClass);
@@ -380,7 +461,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             
             // Now print the instance methods using the types and names 
             p1.println("    // The instance methods of java.lang.plainClassName"); 
-            
+              // p1.println(specialnames);
             for ( int i = 0; i < types2.size(); i++) { 
                 
                 
@@ -390,7 +471,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 
                 else { 
                         
-                    if (  !(specialnames.get(i).contains(plainClassName)) ) {  
+                    if (  !(specialnames.get(i).equals(plainClassName)) ) {  
                     
                         ArrayList<Integer> getTheParameters = new ArrayList<Integer>(); 
 
@@ -465,7 +546,10 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             for ( int i = 0; i < names.size(); i++ ) { 
                 
                 if ( !(arr1.contains(names.get(i)))) {
+                    
                     p1.println();
+                    
+                    
                     ArrayList<Integer> getTheParameters = new ArrayList<Integer>(); 
                     
                     
@@ -476,7 +560,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     else { 
                     
-                        if ( !(specialnames.get(i).contains(plainClassName)) ) {    
+                        if ( !(specialnames.get(i).equals(plainClassName)) ) {    
                         
                             Pattern pp = Pattern.compile("\\$");    
                     
@@ -518,18 +602,30 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println(); 
             // Now the constructor initilization inlined in the header 
             p1.println("    __" + plainClassName + "_VT()");
-            p1.println("    : __isa(__" + plainClassName + "::__class()),");
+            p1.println("    : __isa(__" + "Object" + "::__class()),");
             
             List<String> getImplementation = new ArrayList<String>();
+               
+               int COUNT = 0; 
             
-            for ( int i = 0; i < arr1.size(); i++) { 
+               
+               
+               // Are there any instance methods 
+               for ( int i = 0; i < specialnames.size(); i++ ) {    
+                   if ( !(specialnames.equals(plainClassName)))
+                   
+                       COUNT++;
+               
+               }
+              // p1.println(COUNT);
+               for ( int i = 0; i < arr1.size(); i++) { 
                 
-                if( names.contains(arr1.get(i))) { 
-                    
-                    getImplementation.add(plainClassName); 
-                }   
+                   if( names.contains(arr1.get(i))) { 
+                        
+                       getImplementation.add(plainClassName); 
+                   }   
                 
-                else {
+                   else {
                     
                     getImplementation.add("Object"); 
                 }
@@ -542,6 +638,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 p1.println("      hashCode(&__" + plainClassName + "::hashCode),"); 
             
             
+           
             if (getImplementation.get(1).equals("Object")) 
                 p1.println("      equals((bool(*)(" + plainClassName + ",Object)) &__" + getImplementation.get(1) + "::equals), "); 
             
@@ -555,13 +652,31 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 p1.println("      getClass(&__" + plainClassName + ")");
             
             // Remember to Take care of the comma issue 
-            if (getImplementation.get(3).equals("Object"))
-                p1.println("      toString((String(*)(" + plainClassName + ")) &__" + getImplementation.get(3) + "::toString), ");
-            
-            else 
-                p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
-            
-           
+               if (getImplementation.get(3).equals("Object")) {
+                   
+                   if(COUNT != 0) 
+                       p1.println("      toString((String(*)(" + plainClassName + ")) &__" + getImplementation.get(3) + "::toString), ");
+                   else
+                       p1.println("      toString((String(*)(" + plainClassName + ")) &__" + getImplementation.get(3) + "::toString){ ");
+
+                    
+               }    
+                   
+                   
+            else {
+                int x = names.size();
+                boolean bat = false; 
+                if((x==1) && (names.get(0).equals("toString")))
+                    bat = true; 
+                if(COUNT != 0 && !(bat) ) 
+                    p1.println("      toString(&__" + getImplementation.get(3) + "::toString),"); 
+                
+                
+                else
+                    p1.println("      toString(&__" + getImplementation.get(3) + "::toString){");
+                
+            }    
+             //  p1.println(specialnames);
             // ADD Remaining Methods to implementation 
             for ( int i = 0; i < names.size(); i++) { 
                                   
@@ -577,14 +692,14 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                     // Finally Add Parameters Here 
                     else {
-                        if ( parameters.get(specialnames.get(i)).equals("ZeroParams") && !(specialnames.get(i).contains(plainClassName))){
+                        if ( parameters.get(specialnames.get(i)).equals("ZeroParams") && !(specialnames.get(i).contains(plainClassName)) && !(arr1.contains(specialnames.get(i)))){
 
                         p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
                         p1.println();
                         }
                         else { 
                             
-                            if(!(specialnames.get(i).contains(plainClassName))) { 
+                            if(!(specialnames.get(i).equals(plainClassName)) && !(arr1.contains(specialnames.get(i)))  ) { 
                             
                             ArrayList<Integer> getTheParameters = new ArrayList<Integer>();
                             
