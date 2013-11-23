@@ -98,6 +98,8 @@ public class JavaPrinter extends Visitor {
   /** The operator precedence level for the current expression. */
   protected int precedence;
 
+
+  Node returnthis;
   /**
    * Create a new Java printer.
    *
@@ -398,7 +400,13 @@ public class JavaPrinter extends Visitor {
 
   /** Visit the specified translation unit. */
   public void visitCompilationUnit(GNode n) {
-    printer.p("#includes?").pln().p("namespace?").pln().pln();
+    printer.p("#include \"java_lang.h\" ").pln();
+    printer.p("#include \"Header.h\" ").pln();
+    printer.p("#include <sstream> ").pln();
+    printer.p("namespace java {").pln();
+    printer.p("namespace lang {").pln().pln();
+
+
 
     // Reset the state.
     packageName   = null;
@@ -476,19 +484,21 @@ public class JavaPrinter extends Visitor {
     printer.p(')');
   }
 
+String retu;
   /** Visit the specified declarator. */
   public void visitDeclarator(GNode n) {
-    printer.p(n.getString(0));
-    if(null != n.get(1)) {
-      if (Token.test(n.get(1))) {
-        formatDimensions(n.getString(1).length());
-      } else {
-        printer.p(n.getNode(1));
-      }
-    }
-    if(null != n.get(2)) {
-      printer.p(" = ").p(n.getNode(2));
-    }
+    retu = (n.getString(0));
+    // printer.p(n.getString(0));
+    // if(null != n.get(1)) {
+    //   if (Token.test(n.get(1))) {
+    //     formatDimensions(n.getString(1).length());
+    //   } else {
+    //     printer.p(n.getNode(1));
+    //   }
+    // }
+    // if(null != n.get(2)) {
+    //   printer.p(" = ").p(n.getNode(2));
+    // }
   }
 
   /** Visit the specified declarators. */
@@ -532,6 +542,7 @@ public class JavaPrinter extends Visitor {
 
   /** Visit the specified class body. */
   public void visitClassBody(GNode n) {
+
     if (isOpenLine) printer.p(' ');
     //printer.pln('{').incr();
 
@@ -540,59 +551,91 @@ public class JavaPrinter extends Visitor {
     printer.decr().indent();
     isOpenLine    = true;
     isNested      = false;
-    isIfElse      = false;
+  //  isIfElse      = false;
   }
   
  String[] parts;
+ String[] partsofmethod;
 
   /** Visit the specified field declaration. */
   public void visitFieldDeclaration(GNode n) {
-    printer.indent().p(n.getNode(0)).p(n.getNode(1)).p(' ').p(n.getNode(2)).
-      p(';').pln();
+    printer.p("//");
+    printer.p(n.getNode(0)).p(n.getNode(1)).p(' ').p(n.getNode(2)).p(';').pln();
     isDeclaration = true;
     isOpenLine    = false;
   }
+
+
+
   
   /** Visit the specified method declaration. */
   public void visitMethodDeclaration(GNode n) {
-    printer.p("__").p(classopener);
-    printer.indent().p("::");
+    //printer.p(n.toString());
 
 
-    if (null != n.get(1)) 
-      printer.p(n.getNode(1)).p(' ');
+    returnthis = n.getNode(5);
+
+    //printer.p(n.toString());
+    partsofmethod = (n.toString()).split(" ");
    
 
-    if (! "<init>".equals(n.get(3))) {
-      parts = (n.getString(3)).split("\\$");
-      if (parts[0].equals("main")){
-        printer.p("int_32 main(){");
-      }
-      else {
+
+    if (null != n.get(1)) {
+      printer.p(n.getNode(1)).p(' ');
+    }
     
-        printer.p(parts[0]).p(" ");
-    printer.p("here").p(n.getNode(4)).p("{");
+    parts = (n.getString(3)).split("\\$");
+    if (parts[0].equals("main")){
+       
+    }
+
+    else if (parts[0].equals(classopener)){
       
-    }} 
-
-    if (null != n.get(5)) {
-      printer.p(' ').p(n.getNode(5));
     }
 
+    else {
 
-    if (null != n.get(6)) {
-      printer.p(' ').p(n.getNode(6));
+        // printer.p(partsofmethod[0]).pln().pln().pln();
+        // printer.p(partsofmethod[1]).pln().pln().pln();
+        // printer.p(partsofmethod[2]).pln().pln().pln();
+        // printer.p(partsofmethod[3]).pln().pln().pln();
+        // printer.p(partsofmethod[4]).pln().pln().pln();
+        // printer.p(partsofmethod[5]).pln().pln().pln();
+
+
+
+      // Instance Method 
+
+      printer.p(n.getNode(2)).p(" __").p(classopener).p("::");
+      printer.p(n.getString(3)).p("(");
+      printer.p(classopener).p("__this){");
+
+
+      //printer.p(n.getNode(7).toString()).pln().pln();
+
+     // String __A::toString( A __this) { 
+     
+     //     std::ostringstream sout;
+     //     sout << "A";
+     //     return new __String(sout.str());
+         
+     
+     
+     // }
+       
+
+        //printer.p("methodname:").p(n.getString(3)).pln();
+        //printer.p("returntype:").p(n.getNode(2)).pln();
+        
+
+
+      if (null != n.get(7)) {
+        isOpenLine = true;
+        printer.p(n.getNode(7));
+      } 
     }
 
-
-    if (null != n.get(7)) {
-      isOpenLine = true;
-      printer.p(n.getNode(7));
-    } 
-    //else {
-  //     printer.pln(';');
-  //   }
-  //   isOpenLine = false;
+    isOpenLine = true;
     
   }
 		
@@ -612,20 +655,31 @@ public class JavaPrinter extends Visitor {
 
   /** Visit the specified class declaration. */
   public void visitClassDeclaration(GNode n) {
+    //printer.p(n.toString());
     classopener = (n.getString(1));
 
-    
+    //constructor
 
-    if (null != n.get(3)) {
-      printer.p(' ').p(n.getNode(3));
-    }
-    if (null != n.get(4)) {
-      printer.p(' ').p(n.getNode(4));
-    }
-    isOpenLine    = true;
-    printer.p(n.getNode(5)).pln();
-    isDeclaration = true;
-    isOpenLine    = false;
+    printer.p("__").p(classopener).p("::").p("__").p(classopener).p("()").p(" : __vptr(&__vtable) {}").pln().pln();
+
+
+    // Basically the One Static vtable 
+     
+    printer.p("__").p(classopener).p("__VT " ).p("__").p(classopener).p(":: __vtable;").pln().pln();
+
+     
+    //printer.p(n.toString()).pln().pln().pln();
+
+    // if (null != n.get(3)) {
+    //   printer.p(' ').p(n.getNode(3));
+    // }
+    // if (null != n.get(4)) {
+    //   printer.p(' ').p(n.getNode(4));
+    // }
+     isOpenLine    = true;
+     printer.p(n.getNode(5)).pln();
+     isDeclaration = true;
+     isOpenLine    = false;
   }
 		
   /** Visit the specified interface declaration. */
@@ -987,16 +1041,37 @@ public class JavaPrinter extends Visitor {
     endStatement(nested);
   }
 
+  
+
   /** Visit the specified return statement. */
   public void visitReturnStatement(GNode n) {
-    final boolean nested = startStatement(STMT_ANY);
-    printer.indent().p("return");
-    if (null != n.get(0)) {
-      printer.p(' ').p(n.getNode(0));
-    }
-    printer.pln(';');
-    endStatement(nested);
+
+    
+
+
+
+    if ((n.toString()).contains("StringLiteral")){
+      printer.p("std::ostringstream sout;").pln();
+      printer.p("sout <<").p(n.getNode(0)).p(";").pln();
+      printer.p("return new __String(sout.str());").pln();
+
+}
+
+else if ((n.toString()).contains("ThisExpression")){
+    
+      printer.p("return __this->").p(retu).pln();
+
+     
+
+}
+    else{ printer.p(n.toString()).pln().pln();
+
+}
+
+    
     isOpenLine = false;
+
+
   }
 
   /** Visit the specified throw statement. */
@@ -1314,6 +1389,7 @@ public class JavaPrinter extends Visitor {
 
   /** Visit the specified this expression. */
   public void visitThisExpression(GNode n) {
+    printer.p("visitThisExpression!!!");
     final int prec = startExpression(160);
     if (null != n.get(0)) printer.p(n.getNode(0)).p('.');
     printer.p("this");
@@ -1331,7 +1407,7 @@ public class JavaPrinter extends Visitor {
   /** Visit the specified primary identifier. */
   public void visitPrimaryIdentifier(GNode n) {
     final int prec = startExpression(160);
-    printer.p(n.getString(0));
+   // printer.p(n.getString(0));
     endExpression(prec);
   }	  
 

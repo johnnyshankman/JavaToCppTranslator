@@ -6,7 +6,7 @@ import java.io.Reader;
 
 import xtc.lang.JavaFiveParser;
 import xtc.lang.CParser;
-import xtc.lang.JavaPrinter;
+import oop.JavaPrinter;
 import xtc.lang.CPrinter;
 import xtc.lang.JavaAstSimplifier;
 
