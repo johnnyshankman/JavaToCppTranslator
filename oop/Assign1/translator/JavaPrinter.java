@@ -422,7 +422,11 @@ public class JavaPrinter extends Visitor {
   }
 
   public void visitStreamOutputList(GNode n){
-    printer.p("std::cout put string here << std::endl;");
+    printer.p("std::cout<<" +  n.getNode(1).getString(0) + " << std::endl;");
+  
+
+
+
   }
     
   /** Visit the specified package declaration. */
@@ -608,11 +612,27 @@ String retu;
 
       printer.p(n.getNode(2)).p(" __").p(classopener).p("::");
       printer.p(n.getString(3)).p("(");
-      printer.p(classopener).p("__this){");
+      if(n.getNode(4).size()==0)
+            printer.p(classopener).p(" __this){");
+      else {
 
+        printer.p(classopener).p(" __this, ");
+    
+        for ( int i = 0; i < n.getNode(4).size(); i++ ) { 
+
+        if ( i != n.getNode(4).size()-1)
+            printer.p(n.getNode(4).getNode(i).getNode(1).getNode(0).getString(0) + " " + n.getNode(4).getNode(i).getString(3) + "  " + ",");
+        else 
+            printer.p(n.getNode(4).getNode(i).getNode(1).getNode(0).getString(0) + " " + n.getNode(4).getNode(i).getString(3) + "  " + "){");
+
+
+        }
+        
+        
+      }
 
       //printer.p(n.getNode(7).toString()).pln().pln();
-
+      isOpenLine = false;
      // String __A::toString( A __this) { 
      
      //     std::ostringstream sout;
@@ -728,7 +748,7 @@ String retu;
 
     if (null != n.get(4)) {
       printer.pln(';').pln();
-      isOpenLine = false;
+
       isNested   = false;
       isIfElse   = false;
       printer.p(n.getNode(4));
@@ -1051,6 +1071,8 @@ String retu;
 
 
     if ((n.toString()).contains("StringLiteral")){
+      
+
       printer.p("std::ostringstream sout;").pln();
       printer.p("sout <<").p(n.getNode(0)).p(";").pln();
       printer.p("return new __String(sout.str());").pln();
