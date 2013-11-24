@@ -132,28 +132,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 // p1.println(mNAccess.get("goel")); 
             
                final GNode constructorPrinter = GNode.create("ConstructorPrinter");
-            // Need another dispatch for constructor heeader node    
-               new Visitor() {
-                   public void visitConstructorHeader(GNode n ) { 
-                       
-                       // Add each node 
-                       constructorPrinter.add(n);
-                       
-                   }
-                   
-                   public void visit(Node n) {
-                       for (Object o : n) if (o instanceof Node) dispatch((Node) o);
-                   }
-                   
-               }.dispatch(createCplusplusHeader);
-              // p1.println(constructorPrinter.size());
-            // Find out when the virtual method declarations ends 
-               
-               
-               
-               
-               
-               
+            
                
             final ArrayList<Integer> getCounter = new ArrayList<Integer>(); 
             new Visitor() {
@@ -175,10 +154,29 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             /*Remove comments below to Debug**/
             // p1.println(startHere);
             
-            String className = vMethods.getNode(startHere).getNode(4).getNode(0).getString(0); 
+           final String className = vMethods.getNode(startHere).getNode(4).getNode(0).getString(0); 
             
-            String plainClassName = className.substring(2, className.length()); 
+          final  String plainClassName = className.substring(2, className.length()); 
              
+               
+               // Need another dispatch for constructor heeader node    
+               new Visitor() {
+                   public void visitConstructorHeader(GNode n ) { 
+                       
+                       // Add each node 
+                       if(n.getString(0).equals(plainClassName))
+                           constructorPrinter.add(n);
+                       
+                   }
+                   
+                   public void visit(Node n) {
+                       for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                   }
+                   
+               }.dispatch(createCplusplusHeader);
+               // p1.println(constructorPrinter.size());
+               // Find out when the virtual method declarations ends 
+               
             /*Remove comments below to Debug**/
             // p1.println(getCounter); 
             
@@ -296,7 +294,14 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                            
                            
                        }
-                   }   
+                   }  
+                   
+                   else
+                       p1.println(className + "();");
+                   
+                   
+                   
+                   
                }
                
                if ( DECLARATOR.size() >= 1 && typeOfParameter.size() >= 1) { 
