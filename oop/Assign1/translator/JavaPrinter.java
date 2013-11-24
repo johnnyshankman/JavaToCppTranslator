@@ -488,7 +488,7 @@ public class JavaPrinter extends Visitor {
     printer.p(')');
   }
 
-String retu;
+ String retu;
   /** Visit the specified declarator. */
   public void visitDeclarator(GNode n) {
     retu = (n.getString(0));
@@ -563,8 +563,8 @@ String retu;
 
   /** Visit the specified field declaration. */
   public void visitFieldDeclaration(GNode n) {
-    printer.p("//");
-    printer.p(n.getNode(0)).p(n.getNode(1)).p(' ').p(n.getNode(2)).p(';').pln();
+    //printer.p("//");
+   // printer.p(n.getNode(0)).p(n.getNode(1)).p(' ').p(n.getNode(2)).p(';').pln();
     isDeclaration = true;
     isOpenLine    = false;
   }
@@ -594,7 +594,7 @@ String retu;
     }
 
     else if (parts[0].equals(classopener)){
-      
+        
     }
 
     else {
@@ -1076,16 +1076,14 @@ String retu;
       printer.p("std::ostringstream sout;").pln();
       printer.p("sout <<").p(n.getNode(0)).p(";").pln();
       printer.p("return new __String(sout.str());").pln();
+    }
 
-}
 
-else if ((n.toString()).contains("ThisExpression")){
-    
-      printer.p("return __this->").p(retu).pln();
+    else if ((n.toString()).contains("ThisExpression")){
+      retu = n.getNode(0).getNode(0).getString(0);
+      printer.p("return __this->").p(retu + ";").pln();
 
-     
-
-}
+     }
     else{ printer.p(n.toString()).pln().pln();
 
 }
