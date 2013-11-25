@@ -646,7 +646,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     getImplementation.add("Object"); 
                 }
             }
-               p1.println("    __delete((void(*)(__" + plainClassName + "*" + "))&__Object::__delete),");
+               p1.println("    __delete(&__rt::__delete<__" + plainClassName + ">),");
             // Hardcoded May Need to Change in the final Phase 
             if ( getImplementation.get(0).equals("Object")) 
                 p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 

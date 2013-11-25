@@ -11,18 +11,17 @@ struct __A;
 
 struct __A_VT;
 
-typedef __A* A;
+typedef __rt::Ptr<__A> A;
 
 struct __A { 
 
     // The data layout for java.lang.plainClassName
       __A_VT* __vptr;
 
+
      // The Constructor
 
-      __A(); 
-
-A
+          __A(); 
     // The instance methods of java.lang.plainClassName
     static String toString( A);
 
@@ -35,6 +34,7 @@ A
 
 struct __A_VT{
     Class __isa;
+    void (*__delete)(__A*);
     int32_t (*hashCode)(A);
     bool (*equals)(A,Object);
     Class (*getClass)(A);
@@ -42,57 +42,57 @@ struct __A_VT{
 
 
     __A_VT()
-    : __isa(__A::__class()),
+    : __isa(__Object::__class()),
+    __delete(&__rt::__delete<__A>),
       hashCode((int32_t(*)(A))&__Object::hashCode),
       equals((bool(*)(A,Object)) &__Object::equals), 
       getClass((Class(*)(A)) &__Object::getClass), 
-      toString(&__A::toString),
-      toString((String(*)(A))&__A::toString),
-
+      toString(&__A::toString){
     }
 };
 
 
 
-struct __Test2;
+struct __Test1;
 
-struct __Test2_VT;
+struct __Test1_VT;
 
-typedef __Test2* Test2;
+typedef __rt::Ptr<__Test1> Test1;
 
-struct __Test2 { 
+struct __Test1 { 
 
     // The data layout for java.lang.plainClassName
-      __Test2_VT* __vptr;
+      __Test1_VT* __vptr;
+
 
      // The Constructor
 
-      __Test2(); 
-
-Test2
+          __Test1(); 
     // The instance methods of java.lang.plainClassName
 
     // The Function returning the class Object representing java.lang.plainClassName 
     static Class __class(); 
 
-    static __Test2_VT __vtable;
+    static __Test1_VT __vtable;
 
  };
 
-struct __Test2_VT{
+struct __Test1_VT{
     Class __isa;
-    int32_t (*hashCode)(Test2);
-    bool (*equals)(Test2,Object);
-    Class (*getClass)(Test2);
-    String (*toString) (Test2);
+    void (*__delete)(__Test1*);
+    int32_t (*hashCode)(Test1);
+    bool (*equals)(Test1,Object);
+    Class (*getClass)(Test1);
+    String (*toString) (Test1);
 
 
-    __Test2_VT()
-    : __isa(__Test2::__class()),
-      hashCode((int32_t(*)(Test2))&__Object::hashCode),
-      equals((bool(*)(Test2,Object)) &__Object::equals), 
-      getClass((Class(*)(Test2)) &__Object::getClass), 
-      toString((String(*)(Test2)) &__Object::toString), 
+    __Test1_VT()
+    : __isa(__Object::__class()),
+    __delete(&__rt::__delete<__Test1>),
+      hashCode((int32_t(*)(Test1))&__Object::hashCode),
+      equals((bool(*)(Test1,Object)) &__Object::equals), 
+      getClass((Class(*)(Test1)) &__Object::getClass), 
+      toString((String(*)(Test1)) &__Object::toString){ 
     }
 };
 
