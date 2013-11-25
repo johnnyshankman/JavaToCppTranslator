@@ -114,12 +114,12 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
            /*Remove comments below to Debug**/ 
            // p1.println(stac.size()); 
           
-            
+            String globalVariableArrayCheck;
            for ( int b = 4; b < stac.size(); b++) { 
             
                 createCplusplusHeader = (GNode)stac.getNode(b); 
                 GNode vMethods = (GNode) createCplusplusHeader.getNode(0);
-                //p1.println(vMethods.getName());
+                //p1.println(createCplusplusHeader.getName());
                 /*Remove comments below to Debug**/
                 // p1.println(vMethods.getName()); 
                 // We need a mapping of methodName to accessibility
@@ -157,7 +157,8 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
            final String className = vMethods.getNode(startHere).getNode(4).getNode(0).getString(0); 
             
           final  String plainClassName = className.substring(2, className.length()); 
-             
+           
+               final GNode ARRAYTRACKER = GNode.create("ArrayTracker");
                
                // Need another dispatch for constructor heeader node    
                new Visitor() {
@@ -167,6 +168,12 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                        if(n.getString(0).equals(plainClassName))
                            constructorPrinter.add(n);
                        
+                   }
+                   
+                   
+                   public void visitCustomArrayDeclaration(GNode n) { 
+                       ARRAYTRACKER.add(n);
+                   
                    }
                    
                    public void visit(Node n) {
@@ -184,7 +191,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println();
             p1.println("struct __" + plainClassName + "_VT;");
             p1.println();
-            p1.println("typedef " + "__" + plainClassName + "* " + plainClassName + ";");
+            p1.println("typedef __rt::Ptr<" + "__" + plainClassName + "> " + plainClassName + ";");
             p1.println();
             p1.println("struct __" + plainClassName + " { " );
             p1.println();
@@ -546,6 +553,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
            // Basically iterate through map and add any methods that have a type not equal to the 
             
             // You need to add the inherited types 
+            p1.println("    void (*__delete)(__" + plainClassName + "*);");
             p1.println("    int32_t (*hashCode)(" + plainClassName + ");");
             p1.println("    bool (*equals)(" + plainClassName + "," + "Object);"); 
             p1.println("    Class (*getClass)(" + plainClassName + ");"); 
@@ -638,7 +646,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     getImplementation.add("Object"); 
                 }
             }
-            
+               p1.println("    __delete((void(*)(__" + plainClassName + "*" + "))&__Object::__delete),");
             // Hardcoded May Need to Change in the final Phase 
             if ( getImplementation.get(0).equals("Object")) 
                 p1.println("      hashCode((int32_t(*)(" + plainClassName + "))" + "&__" + getImplementation.get(0) + "::hashCode),"); 
@@ -787,6 +795,10 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println();
             p1.println();
               /*Remove comments below to Debug**/
+               
+               
+                
+               
 
            } 
                 //p1.println(names);

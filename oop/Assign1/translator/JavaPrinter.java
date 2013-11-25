@@ -1101,7 +1101,7 @@ public class JavaPrinter extends Visitor {
       
 
       p2.println("   std::ostringstream sout;");
-      p2.println("   sout <<" + n.getNode(0) + ";");
+      p2.println("   sout <<" + n.getNode(0).getString(0) + ";");
       p2.println("   return new __String(sout.str());");
     }
 
