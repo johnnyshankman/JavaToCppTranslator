@@ -26,7 +26,10 @@ import xtc.tree.GNode;
 import xtc.tree.Printer;
 import xtc.tree.Token;
 import xtc.tree.Visitor;
-
+import java.io.File; 
+import java.io.IOException;
+import java.io.Reader; 
+import java.io.*; 
 /**
  * A pretty printer for Java.
  *
@@ -82,6 +85,8 @@ public class JavaPrinter extends Visitor {
   /** The flag for whether the last statement ended with an open line. */
   protected boolean isOpenLine;
 
+    public  PrintWriter p2; 
+     
   /**
    * The flag for whether the current statement requires nesting or
    * for whether the current declaration is nested within a for
@@ -116,6 +121,7 @@ public class JavaPrinter extends Visitor {
    * @param qid The qualified identifier.
    * @param size Its size.
    */
+     
   protected String fold(GNode qid, int size) {
     StringBuilder buf = new StringBuilder();
     for (int i=0; i<size; i++) {
@@ -400,12 +406,22 @@ public class JavaPrinter extends Visitor {
 
   /** Visit the specified translation unit. */
   public void visitCompilationUnit(GNode n) {
-    printer.p("#include \"java_lang.h\" ").pln();
-    printer.p("#include \"Header.h\" ").pln();
-    printer.p("#include <sstream> ").pln();
-    printer.p("namespace java {").pln();
-    printer.p("namespace lang {").pln().pln();
+    
+    File cppFile; 
+    try { 
+        cppFile = new File("cplusplusfiles", "Method_Bod.cc");
+        cppFile.createNewFile();
+        p2 = new PrintWriter(cppFile); 
 
+    
+
+    
+    p2.println("#include \"java_lang.h\" ");
+    p2.println("#include \"Header.h\" ");
+    p2.println("#include <sstream> ");
+    p2.println("namespace java {");
+    p2.println("namespace lang {");
+     
 
 
     // Reset the state.
@@ -418,11 +434,21 @@ public class JavaPrinter extends Visitor {
     precedence    = PREC_BASE;
 
     printDeclsAndStmts(n);
+    p2.println("}");
+    p2.println("}");
+    p2.flush();
+    p2.close();
     
-  }
+    }
+    catch (Exception e) { 
+
+    }
+    
+    
+}
 
   public void visitStreamOutputList(GNode n){
-    printer.p("std::cout<<" +  n.getNode(1).getString(0) + " << std::endl;");
+    p2.println("std::cout<<" +  n.getNode(1).getString(0) + " << std::endl;");
   
 
 
@@ -508,8 +534,8 @@ public class JavaPrinter extends Visitor {
   /** Visit the specified declarators. */
   public void visitDeclarators(GNode n) {
     for (Iterator<Object> iter = n.iterator(); iter.hasNext(); ) {
-      printer.p((Node)iter.next());
-      if (iter.hasNext()) printer.p(", ");
+      p2.println((Node)iter.next());
+      if (iter.hasNext()) p2.println(", ");
     }
   }
 
@@ -576,7 +602,7 @@ public class JavaPrinter extends Visitor {
   public void visitMethodDeclaration(GNode n) {
     //printer.p(n.toString());
 
-
+    p2.println();
     returnthis = n.getNode(5);
 
     //printer.p(n.toString());
@@ -585,7 +611,7 @@ public class JavaPrinter extends Visitor {
 
 
     if (null != n.get(1)) {
-      printer.p(n.getNode(1)).p(' ');
+      p2.println(n.getNode(1));
     }
     
     parts = (n.getString(3)).split("\\$");
@@ -610,20 +636,20 @@ public class JavaPrinter extends Visitor {
 
       // Instance Method 
 
-      printer.p(n.getNode(2)).p(" __").p(classopener).p("::");
-      printer.p(n.getString(3)).p("(");
+        p2.print(n.getNode(2).getNode(0).getString(0) + "__" + classopener + "::");
+        p2.print(n.getString(3) + "(");
       if(n.getNode(4).size()==0)
-            printer.p(classopener).p(" __this){");
+            p2.println(classopener + "__this) { ");
       else {
 
-        printer.p(classopener).p(" __this, ");
+        p2.print(" __this, ");
     
         for ( int i = 0; i < n.getNode(4).size(); i++ ) { 
 
         if ( i != n.getNode(4).size()-1)
-            printer.p(n.getNode(4).getNode(i).getNode(1).getNode(0).getString(0) + " " + n.getNode(4).getNode(i).getString(3) + "  " + ",");
+            p2.print(n.getNode(4).getNode(i).getNode(1).getNode(0).getString(0) + " " + n.getNode(4).getNode(i).getString(3) + "  " + ",");
         else 
-            printer.p(n.getNode(4).getNode(i).getNode(1).getNode(0).getString(0) + " " + n.getNode(4).getNode(i).getString(3) + "  " + "){");
+            p2.println(n.getNode(4).getNode(i).getNode(1).getNode(0).getString(0) + " " + n.getNode(4).getNode(i).getString(3) + "  " + "){");
 
 
         }
@@ -656,7 +682,7 @@ public class JavaPrinter extends Visitor {
     }
 
     isOpenLine = true;
-    
+   // p2.println("}");
   }
 		
   /** Visit the specified constructor declaration. */
@@ -680,12 +706,12 @@ public class JavaPrinter extends Visitor {
 
     //constructor
 
-    printer.p("__").p(classopener).p("::").p("__").p(classopener).p("()").p(" : __vptr(&__vtable) {}").pln().pln();
+    p2.println("__" + classopener + "::" + "__" + classopener + "()" + " : __vptr(&__vtable) {}"); 
 
 
     // Basically the One Static vtable 
      
-    printer.p("__").p(classopener).p("__VT " ).p("__").p(classopener).p(":: __vtable;").pln().pln();
+    p2.println("__" + classopener + "__VT " + "__" + classopener + ":: __vtable;");
 
      
     //printer.p(n.toString()).pln().pln().pln();
@@ -856,6 +882,7 @@ public class JavaPrinter extends Visitor {
     isOpenLine    = true;
     isNested      = false;
     isIfElse      = false;
+    p2.println("}");
   }
 
   /** Visit the specified conditional statement. */
@@ -1073,15 +1100,15 @@ public class JavaPrinter extends Visitor {
     if ((n.toString()).contains("StringLiteral")){
       
 
-      printer.p("std::ostringstream sout;").pln();
-      printer.p("sout <<").p(n.getNode(0)).p(";").pln();
-      printer.p("return new __String(sout.str());").pln();
+      p2.println("   std::ostringstream sout;");
+      p2.println("   sout <<" + n.getNode(0) + ";");
+      p2.println("   return new __String(sout.str());");
     }
 
 
     else if ((n.toString()).contains("ThisExpression")){
       retu = n.getNode(0).getNode(0).getString(0);
-      printer.p("return __this->").p(retu + ";").pln();
+      p2.println("   return __this->" + retu + ";"); 
 
      }
     else{ printer.p(n.toString()).pln().pln();
@@ -1632,3 +1659,7 @@ public class JavaPrinter extends Visitor {
   }
 
 }
+
+
+
+

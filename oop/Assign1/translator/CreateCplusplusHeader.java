@@ -296,11 +296,14 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                        }
                    }  
                    
-                   else
-                       p1.println(className + "();");
+                   else {
+                       
+                       p1.println();
+                       
+                       p1.println("      " + className + "();");
                    
                    
-                   
+                   }
                    
                }
                
@@ -323,7 +326,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                p1.println();
                p1.println("     "   +  "// The Constructor"); 
                p1.println();
-               p1.println("      " +  "__" + plainClassName + "(); "); 
+               p1.println("          " +  "__" + plainClassName + "(); "); 
                }
                
                
@@ -681,7 +684,24 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     p1.println("      toString(&__" + getImplementation.get(3) + "::toString){");
                 
             }    
-             //  p1.println(specialnames);
+              //p1.println(names);
+               
+               
+               
+               
+               
+            //    
+               
+               
+               for ( int uniqueNames = 0; uniqueNames < names.size(); uniqueNames++) {    
+               
+                   // Remove Unnecessary Methods
+                   if(arr1.contains(names.get(uniqueNames))) {
+                       names.remove(uniqueNames);
+                       specialnames.remove(uniqueNames);
+                   }    
+               }
+               
             // ADD Remaining Methods to implementation 
             for ( int i = 0; i < names.size(); i++) { 
                                   
@@ -699,8 +719,16 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     else {
                         if ( parameters.get(specialnames.get(i)).equals("ZeroParams") && !(specialnames.get(i).contains(plainClassName)) && !(arr1.contains(specialnames.get(i)))){
 
-                        p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
-                        p1.println();
+                            if(i!=names.size()-1)
+                            p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "),"); 
+                            
+                            
+                            else 
+                               p1.println("      " + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + "))" + "&" + checkForOtherSuperClass.get(i+6) + "::"  + specialnames.get(i) + "){"); 
+                        
+                            
+                            p1.println();
+                        
                         }
                         else { 
                             
@@ -732,7 +760,11 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                                 else {
                                     int length = parameters.get(specialnames.get(i)).length();
                                     p1.print( parameters.get(specialnames.get(i)).substring(getTheParameters.get(cc) + 1, length));
-                                    p1.print("))" + "&" + checkForOtherSuperClass.get(i+6) + "::" + specialnames.get(i) + "),");
+                                    if(i!=names.size()-1)
+                                        p1.print("))" + "&" + checkForOtherSuperClass.get(i+6) + "::" + specialnames.get(i) + "),");
+                                    else 
+                                        p1.print("))" + "&" + checkForOtherSuperClass.get(i+6) + "::" + specialnames.get(i) + "){");
+
                                     p1.println();
                                 }
                                 
