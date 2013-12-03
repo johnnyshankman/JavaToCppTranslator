@@ -358,8 +358,6 @@ namespace __rt {
   template <typename T>
   Array_VT<T> Array<T>::__vtable;
 
-  // But where is the definition of __class()???
-
   // ========================================================================
 
   // Function for converting a C string lieral to a translated
