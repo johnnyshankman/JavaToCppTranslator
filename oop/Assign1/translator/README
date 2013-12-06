@@ -14,6 +14,14 @@
 
     $ java oop.Translate -translate Tests/Test#.java
 
+***NOTE*** This will fill the screen with debug printouts. Ignore them! ***NOTE ***
+
 4. Translated files can be found in the directory src/oop/cplusplusfiles
 
-DEBUGGING: Currently everything in the window is basically debugging.
+5. To compile and then run the translated program in C++ do the following commands:
+
+    $ cd cplusplusfiles
+    $ g++ Method_Bod.cc main.cc java_lang.cc
+    $ ./a.out
+
+6. Done!
