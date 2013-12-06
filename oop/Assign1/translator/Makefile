@@ -53,8 +53,8 @@ SOURCE = \
        CPPrinter.java \
        CreateCplusplusHeader.java \
        SymbolTableHandler.java \
-       JavaPrinter.java \
-       CreateMethodBodies.java 
+       CreateMethodBodies.java  \
+       JavaPrinter.java
 
 JNI_SOURCE =
 
@@ -79,6 +79,5 @@ patchxtc:
 	cd xtc/lang; \
 	ls; \
 	patch JavaExternalAnalyzer.java JavaExternalAnalyzer.patch; \
-    cd ../.. ; \
-    make clean; \
-    make
+	rm JavaExternalAnalyzer.patch;\
+	rm JavaExternalAnalzyerPatch.java

@@ -5,12 +5,18 @@ class A {
 
   public void setFld(String f) {
     fld = f;
+    
   }
 
   public void almostSetFld(String f) {
-    String fld;
+   
+   // Local variable 
+   String fld;
+   
     fld = f;
   }
+
+
 
   public String getFld() {
     return fld;

@@ -1,7 +1,14 @@
 class A {
+  
   public String toString() {
     return "A";
   }
+
+  
+    
+
+
+
 }
 
 public class Test2 {

@@ -14,6 +14,7 @@ class B extends A {
   public String toString() {
     return some.toString();
   }
+
 }
 
 public class Test16 {

@@ -9,13 +9,25 @@ class A {
     System.out.println(other.a);
   }
 
-  public String toString() {
+  public String makeBelieve() {
     return a;
   }
+
+
+
+
+
+
 }
 
 class B1 extends A {
   String b;
+
+  public void printOther(String s) { 
+
+  }
+
+
 }
 
 class B2 extends A {

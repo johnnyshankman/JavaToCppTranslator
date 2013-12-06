@@ -6,10 +6,10 @@ class A {
   }
 
   public void printOther(A other) {
-    System.out.println(other.toString());
+    System.out.println(other.makeBelieve());
   }
 
-  public String toString() {
+  public String makeBelieve() {
     return a;
   }
 }

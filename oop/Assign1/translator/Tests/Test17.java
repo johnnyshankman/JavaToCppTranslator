@@ -6,6 +6,7 @@ class A {
   }
 
   public A self() { return self; }
+
 }
 
 public class Test17 {

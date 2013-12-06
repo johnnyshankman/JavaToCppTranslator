@@ -200,7 +200,7 @@ public class Translator extends xtc.util.Tool {
         runtime.console().pln("Creating header file...\n").flush();
         GNode createCplusplusHeader = layout.getClassTree();
         CreateCplusplusHeader getHeader = new CreateCplusplusHeader(createCplusplusHeader); 
-        runtime.console().pln("Header file can now be found in output directory.\n").pln().pln().pln().flush();
+        runtime.console().pln("Header file can now be found in cplusplusfiles directory.\n").pln().pln().pln().flush();
         
         
         
@@ -208,7 +208,7 @@ public class Translator extends xtc.util.Tool {
          * This translates the simplified java AST into C++
          * The output of this will be printed in to the class.cc file!
          */
-        runtime.console().pln("Translating body...\n").pln().pln().pln().flush();  
+      //  runtime.console().pln("Translating body...\n").pln().pln().pln().flush();  
         GNode [] ccAstArray = new GNode [50];        
         for(int i=0 ; i<astArray.length ; i++)
         {
@@ -227,12 +227,13 @@ public class Translator extends xtc.util.Tool {
          * Final step woohoo!
          */
         runtime.console().pln("Siphoning output to .cc files...").pln().pln().pln().flush();
+       runtime.console().format(node).pln().pln().pln().flush();
         new JavaPrinter(runtime.console()).dispatch(node);  
         runtime.console().flush();
      
         
         
-        runtime.console().pln("... the translation is now finished! Please check src/oop/output for your translated files. \n").flush();
+        runtime.console().pln("... the translation is now finished! Please check src/oop/cplusplusfiles for your translated files. \n").flush();
 	
        
       

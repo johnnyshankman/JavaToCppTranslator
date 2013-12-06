@@ -5,10 +5,7 @@
 2. While in the src/oop directory run these commands ONCE to forever patch xtc.lang's JavaExternalAnalyzer to run  with our program:
 
     $ make patchxtc
-
-    This should not only patch the necessary files, but recompile all of src with a clean make.
-    If the make commands returned errors, simply return to the src directory and run the following commands to fix the problem.
-
+    $ cd ../..
     $ make clean
     $ make
     $ cd src/oop
@@ -18,3 +15,5 @@
     $ java oop.Translate -translate Tests/Test#.java
 
 4. Translated files can be found in the directory src/oop/cplusplusfiles
+
+DEBUGGING: Currently everything in the window is basically debugging.
