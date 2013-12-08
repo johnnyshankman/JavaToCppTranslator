@@ -5,7 +5,6 @@ class A {
     a = "A";
     System.out.println(a);
   }
-  
 }
 
 class B extends A {

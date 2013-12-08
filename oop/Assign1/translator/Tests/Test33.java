@@ -6,10 +6,10 @@ class A {
   }
 
   public void printOther(A other) {
-    System.out.println(other.a);
+    System.out.println(other.myToString());
   }
 
-  public String toString() {
+  public String myToString() {
     return a;
   }
 }
@@ -24,9 +24,13 @@ class B2 extends A {
 
 class C extends B1 {
   String c;
+
+  public String myToString() {
+    return "still C";
+  }
 }
 
-public class Test11 {
+public class Test12 {
   public static void main(String[] args) {
     A a = new A();
     a.setA("A");

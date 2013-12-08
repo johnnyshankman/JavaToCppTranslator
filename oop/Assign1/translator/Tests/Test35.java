@@ -1,20 +1,15 @@
 class A {
-  String a;
-  
-  public void setA(String x) {
-    a = x;
-  }
+  A some;
 
   public void printOther(A other) {
     System.out.println(other.toString());
   }
 }
 
-public class Test13 {
+public class Test14 {
   public static void main(String[] args) {
     A a = new A();
-    A other = a;
-    other.setA("A");
-    a.printOther(other);
+    A other = new A();
+    a.printOther(other); // throws NullPointerException
   }
 }

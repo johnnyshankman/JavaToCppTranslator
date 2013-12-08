@@ -6,7 +6,7 @@ class A {
   }
 
   public void printOther(A other) {
-    System.out.println(other.a);
+    System.out.println(other.toString());
   }
 
   public String toString() {
@@ -26,7 +26,7 @@ class C extends B1 {
   String c;
 }
 
-public class Test11 {
+public class Test31 {
   public static void main(String[] args) {
     A a = new A();
     a.setA("A");
