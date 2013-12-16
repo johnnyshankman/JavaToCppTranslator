@@ -3,8 +3,9 @@ class A {
   
   public A() {
     a = "A";
-    System.out.println(a);
+    System.out.println(a); 
   }
+  
 }
 
 class B extends A {

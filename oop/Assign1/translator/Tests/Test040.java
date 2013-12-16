@@ -10,11 +10,13 @@ class B extends A {
   void m(Object o1, B a2) { System.out.println("B.m(Object, B)"); }
 }
 
-public class Test038 {
+class C extends A {}
+
+public class Test040 {
   public static void main(String[] args) {
-    B b = new B();
-    b.m( new Object(), (Object) b);
-    b.m( new B(), new Object());
-    b.m((Object) b, new B());
+    C c = new C();
+    c.m(new A(), (Object) c);
+    c.m(new A(), new Object());
+    c.m((Object) c, new A());
   }
 }

@@ -42,6 +42,7 @@ import java.util.*;
  * @author Robert Grimm, Stacey Kuznetsov, Martin Hirzel
  * @version $Revision: 1.71 $
  */
+/* Altered Solely By Ankit Goel **/ 
 public class JavaPrinter extends Visitor {
 
   /**
@@ -430,21 +431,22 @@ public class JavaPrinter extends Visitor {
 
         p3 = new PrintWriter(mainFile); 
     
+            p2.println("// Ankit goel's pretty printing"); 
 
     // Routine Header Stuff 
     p2.println("#include \"java_lang.h\" ");
     p2.println("#include \"Header.h\" ");
     p2.println("#include <sstream> ");
-    p2.println("namespace java {");
-    p2.println("namespace lang {");
-
+    p2.println("using namespace java::lang;");
+    p3.println("// Ankit goel's pretty printing "); 
+    p3.println(); 
     p3.println("#include <iostream>"); 
     p3.println("#include \"java_lang.h\" ");
     p3.println("#include \"Header.h\" ");
     p3.println("#include <sstream> ");
     p3.println("using namespace java::lang;");
     p3.println(); 
-    p3.println("int main(void) { "); 
+   // p3.println("int main(void) { "); 
     p3.println(); 
 
 
@@ -460,12 +462,10 @@ public class JavaPrinter extends Visitor {
 
     printDeclsAndStmts(n);
     p2.println(); 
-    p2.println("}");
-    p2.println("}");
     p2.flush();
     p2.close();
 
-     p3.println("}"); 
+     //p3.println("}"); 
      p3.flush();
      p3.close(); 
     
@@ -479,19 +479,37 @@ public class JavaPrinter extends Visitor {
 
   public void visitStreamOutputList(GNode n){
     
-      if ( !(n.toString().contains("CallExpression")) && !(n.toString().contains("SelectionExpression")))
+      if ( !(n.toString().contains("CallExpression")) && !(n.toString().contains("SelectionExpression")) && !(n.toString().contains("AdditiveExpression")))
         p2.println("    std::cout <<" +  n.getNode(1).getString(0) + " << std::endl;");
   
-      if( n.toString().contains("CallExpression") && !(n.toString().contains("SelectionExpression")) ) {
+    else  if( n.toString().contains("CallExpression") && !(n.toString().contains("SelectionExpression")) && !(n.toString().contains("AdditiveExpression")) ) {
           p2.println("   __rt::checkNotNull(" + n.getNode(1).getNode(0).getString(0) + ");"); 
-          p2.println("    std::cout << " + n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" +  n.getNode(1).getNode(0).getString(0) + ")->data" + " << std::endl;");
+          p2.println("    std::cout << " + n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" +  n.getNode(1).getNode(0).getString(0) + ")" + " << std::endl;");
       }
 
 
-      if( n.toString().contains("SelectionExpression"))
-        p2.println("    std::cout << "  + n.getNode(1).getNode(0).getString(0) + "->" + n.getNode(1).getString(1) + "->data" + " << std::endl" +  ";"); 
+    else if ( n.getNode(1).getNode(0).getName().equals("PrimaryIdentifier") && n.toString().contains("SelectionExpression")) { 
+        p2.println("     std::cout << " + n.getNode(1).getNode(0).getString(0) + "->" + n.getNode(1).getString(1)  + " << std::endl" +  ";");
+
+    }
 
 
+
+    else  if( n.toString().contains("SelectionExpression") && !(n.toString().contains("AdditiveExpression")))
+        p2.println("    std::cout << "  + "__this" + "->" + n.getNode(1).getString(1)  + " << std::endl" +  ";"); 
+
+    else  if( n.toString().contains("AdditiveExpression") && !(n.toString().contains("ThisExpression"))) { 
+        p2.println("   std::cout << " + n.getNode(1).getNode(0).getNode(0).getNode(0).getNode(0).getString(0) + "  " + " << " + "  " + n.getNode(1).getNode(0).getNode(0).getNode(0).getNode(2).getString(0) + " " + "  << " + " " + n.getNode(1).getNode(0).getNode(2).getString(0) + " << " + n.getNode(1).getNode(2).getString(0) + " << std::endl; "); 
+
+
+
+      }
+
+    else if ( n.toString().contains("AdditiveExpression") && (n.toString().contains("ThisExpression"))) { 
+
+      p2.println(" std::cout << " + n.getNode(1).getNode(0).getNode(0).getNode(0).getString(0) + " << " + "__this->" + n.getNode(1).getNode(0).getNode(0).getNode(2).getString(1) + " << " + "__this->" + n.getNode(1).getNode(2).getString(1) + " << std::endl;"); 
+
+    }
 
 
   }
@@ -632,7 +650,7 @@ public class JavaPrinter extends Visitor {
   public void visitFieldDeclaration(GNode n) {
     //printer.p("//");
    //p2.println(printer.p(n.getNode(0)).p(n.getNode(1)).p(' ').p(n.getNode(2)).p(';').pln());
-
+    
 
     if ( (n.size() == 3) && (n.toString().contains("static")) && !(n.toString().contains("IntegerLiteral")) && n.toString().contains("int")) { 
         p2.println(); 
@@ -651,9 +669,13 @@ public class JavaPrinter extends Visitor {
     }
 
     else { 
+      if( n.toString().contains("NewClassExpression")) { 
 
+
+        fieldsThatGoIntoConstructor.add(n.getNode(1).getNode(0).getString(0) + " " + n.getNode(2).getNode(0).getString(0)  + " =  new __" + n.getNode(2).getNode(0).getNode(2).getNode(2).getString(0) + "();");
+      }
       // Check for Declarator  
-       if((n.getNode(2).getNode(0).size() == 3)  && n.getNode(2).toString().contains("StringLiteral") && !(n.toString().contains("static")))
+     else  if((n.getNode(2).getNode(0).size() == 3)  && n.getNode(2).toString().contains("StringLiteral") && !(n.toString().contains("static")))
            fieldsThatGoIntoConstructor.add(n.getNode(2).getNode(0).getString(0) + " = " + " __rt::literal(" + n.getNode(2).getNode(0).getNode(2).getString(0) + ")" + ";"); 
 
       // neeed to do a check for Integer  
@@ -664,7 +686,7 @@ public class JavaPrinter extends Visitor {
       // Other cases 
       //else 
          // fieldsThatGoIntoConstructor.add(n.getNode(1).getNode(0).getString(0) + " " + n.getNode(2).getNode(0).getString(0) + ";");      
-
+        // p2.println(fieldsThatGoIntoConstructor); 
     }
 
 
@@ -693,10 +715,12 @@ public class JavaPrinter extends Visitor {
       //p2.println(n.getNode(1));
     }
     
-    parts = (n.getString(3)).split("\\$");
+    parts = (n.getString(3)).split("_");
     if (parts[0].equals("main")){
 
+            p2.println(); 
 
+            p2.println("void __" + classopener + "::main(__rt::Ptr<__rt::Array<String> > args) { ");
             
               // Print out of the Main Body 
               new Visitor () { 
@@ -704,12 +728,12 @@ public class JavaPrinter extends Visitor {
                   public void visitBlock (GNode n) { 
                     // Nested Block 
                     if ( n.getNode(0).getName().equals("Block")) {
-                      p3.println("{");
+                      p2.println("{");
 
                        nestedBlock = true; 
                        visit(n); 
                       
-                       p3.println(); 
+                       p2.println(); 
                       //p3.println("}"); 
                       //p3.flush();
                       //p3.close(); 
@@ -723,31 +747,360 @@ public class JavaPrinter extends Visitor {
 
                   public void visitFieldDeclaration(GNode n) { 
                        
-                    
+                    if(n.toString().contains("Dimensions") && !(n.toString().contains("NewArrayExpression"))) { 
+                        p2.println();
+                       
+                        p2.print("      __rt::Ptr<__rt::Array<" + n.getNode(1).getNode(0).getString(0) + "> > " +  n.getNode(2).getNode(0).getString(0) + " = " + n.getNode(2).getNode(0).getNode(2).getString(0) + ";"); 
+                        
+                    }
+
+                    else if ( n.toString().contains("NewArrayExpression")) {
+
+                      p2.println();
+                      p2.println("__rt::Ptr<__rt::Array<" + n.getNode(1).getNode(0).getString(0) + "> > " + n.getNode(2).getNode(0).getString(0) + " =  new __rt::Array<"+ n.getNode(1).getNode(0).getString(0) + ">(" + n.getNode(2).getNode(0).getNode(2).getNode(1).getNode(0).getString(0) + ");"); 
+                      p2.println(); 
+                    }
 
 
 
-
-
-                    if ( !(n.toString().contains("NewClassExpression")) && !(n.toString().contains("StringLiteral")) && !(n.toString().contains("Integerliteral")) && (n.toString().contains("SelectionExpression")))  {
-                        p3.println("     " + n.getNode(1).getNode(0).getString(0) + " " + n.getNode(2).getNode(0).getString(0) + " = " + n.getNode(2).getNode(0).getNode(2).getNode(0).getString(0) + "->" + n.getNode(2).getNode(0).getNode(2).getString(1) + ";"); 
+                   else if ( !(n.toString().contains("NewClassExpression")) && !(n.toString().contains("StringLiteral")) && !(n.toString().contains("Integerliteral")) && (n.toString().contains("SelectionExpression")) && n.toString().contains("QualifiedIdentifier"))  {
+                        p2.println("     " + n.getNode(1).getNode(0).getString(0) + " " + n.getNode(2).getNode(0).getString(0) + " = " + n.getNode(2).getNode(0).getNode(2).getNode(0).getString(0) + "->" + n.getNode(2).getNode(0).getNode(2).getString(1) + ";"); 
 
                       
 
 
                     }
 
-                      
 
 
 
 
+                  else  if ( !(n.toString().contains("NewClassExpression")) && n.toString().contains("IntegerLiteral") && !(n.toString().contains("SelectionExpression"))) { 
+
+                        p2.println("    " + "int32_t " + n.getNode(2).getNode(0).getString(0) + " = " + n.getNode(2).getNode(0).getNode(2).getString(0) + ";");
 
 
+                    }  
 
 
-                     else    
+                      else    
                        visit(n); 
+
+
+                  }
+
+                  public void visitForStatement(GNode n) { 
+                    p2.println(); 
+                    if(!(n.toString().contains("length")) )
+                    p2.println("for ( " + n.getNode(0).getNode(1).getNode(0).getString(0) + " " + n.getNode(0).getNode(2).getNode(0).getString(0) + " = " + n.getNode(0).getNode(2).getNode(0).getNode(2).getString(0) + " ; " + n.getNode(0).getNode(3).getNode(0).getString(0) + " " + n.getNode(0).getNode(3).getString(1) + " " + n.getNode(0).getNode(3).getNode(2).getString(0) + " ; " + n.getNode(0).getNode(4).getNode(0).getNode(0).getString(0) + n.getNode(0).getNode(4).getNode(0).getString(1) + " ) { "); 
+                    else if (n.toString().contains("length"))
+                    p2.println("for ( " + n.getNode(0).getNode(1).getNode(0).getString(0) + " " + n.getNode(0).getNode(2).getNode(0).getString(0) + " = " + n.getNode(0).getNode(2).getNode(0).getNode(2).getString(0) + " ; " + n.getNode(0).getNode(3).getNode(0).getString(0) + " " + n.getNode(0).getNode(3).getString(1) + " " + n.getNode(0).getNode(3).getNode(2).getNode(0).getString(0) +"->length" + " ; " + n.getNode(0).getNode(4).getNode(0).getNode(0).getString(0) + n.getNode(0).getNode(4).getNode(0).getString(1) + " ) { "); 
+
+                    new Visitor() { 
+
+
+                      public void visitBlock(GNode n) { 
+                      //  p3.println("{");
+                        visit(n); 
+                        p2.println(); 
+                        p2.println("}"); 
+                        p2.println(); 
+
+                      }
+
+                      public void visitExpressionStatement(GNode n) { 
+
+                          if(n.getNode(0).getName().equals("CallExpression") && !(n.toString().contains("StreamOutputList")) && !(n.toString().contains("SubscriptExpression")))
+                              p2.println("      " + n.getNode(0).getNode(0).getString(0) + "->" + n.getNode(0).getString(2) + "(" + n.getNode(0).getNode(0).getString(0) + ");");
+
+                          else if ( n.toString().contains("SubscriptExpression") && n.toString().contains("NewClassExpression") && !(n.toString().contains("StreamOutputList"))  ) { 
+
+
+                              if ( n.getNode(0).getNode(2).getNode(3).size() == 1 )
+                              p2.println("       "  + "(*" + n.getNode(0).getNode(0).getNode(0).getString(0) + ")" + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]" + " =  __" + n.getNode(0).getNode(2).getNode(2).getString(0) + "::init_Construct( new __" + n.getNode(0).getNode(2).getNode(2).getString(0) + "(" + n.getNode(0).getNode(2).getNode(3).getNode(0).getString(0) + "));" ); 
+                              else 
+                                                            p2.println("       "  + "(*" + n.getNode(0).getNode(0).getNode(0).getString(0) + ")" + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]" + " =  __" + n.getNode(0).getNode(2).getNode(2).getString(0) + "::init_Construct( new __" + n.getNode(0).getNode(2).getNode(2).getString(0) + "());" ); 
+
+
+
+                          }
+
+
+                          else if ( n.toString().contains("SubscriptExpression") && !(n.toString().contains("StreamOutputList")) && n.toString().contains("CallExpression") ) { 
+
+                              p2.print("      " + "(*" + n.getNode(0).getNode(0).getNode(0).getString(0) + ")" + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]->__vptr->" + n.getNode(0).getString(2) + "(" +     "(*" + n.getNode(0).getNode(0).getNode(0).getString(0) + ")"  + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]" +    ");" );
+
+                          }
+                          else 
+                            visit(n); 
+
+
+                      }
+
+                      public void visitStreamOutputList(GNode n) { 
+                          p2.print("  std::cout ");
+
+                          if ( !(n.toString().contains("CallExpression"))) { 
+                         
+
+                          new Visitor() { 
+
+                            public void visitStringLiteral(GNode n) { 
+
+                              p2.print(" << " + n.getString(0)); 
+
+                            }
+                            public void visitSubscriptExpression(GNode n) { 
+                              p2.print(" << " + "(*" + n.getNode(0).getString(0) + ")"  +"[" + n.getNode(1).getString(0) + "]" );
+
+                            }
+
+                            public void visitPrimaryIdentifier(GNode n) { 
+
+                              if(n.getString(0).equals("std::endl"))
+                                  p2.print(" << " + n.getString(0) + " ;"); 
+                              //  p3.println(); 
+
+                            }
+
+
+                            public void visit(GNode n) { 
+                                for ( Object o : n) if ( o instanceof Node) dispatch((Node)o);
+
+                            }
+
+                          }.dispatch(n); 
+
+
+                        }
+
+                        else if ( n.toString().contains("CallExpression") && n.toString().contains("SubscriptExpression") ){ 
+
+                            p2.println("   <<  (*" + n.getNode(1).getNode(0).getNode(0).getString(0) + ")" + "[" + n.getNode(1).getNode(0).getNode(1).getString(0) + "]" + "->__vptr->" + n.getNode(1).getString(2) + "(" + "(*" + n.getNode(1).getNode(0).getNode(0).getString(0) + ")" + "[" + n.getNode(1).getNode(0).getNode(1).getString(0) + "]) << std::endl;" );
+
+
+                        }
+
+
+
+                      }
+
+
+                      public void visit(Node n) {
+                          for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                      }
+
+
+                      }.dispatch(n); 
+
+
+
+                  }
+
+
+                  public void visitConditionalStatement(GNode n) { 
+
+
+                      new Visitor() { 
+
+
+
+                            public void visitEqualityExpression(GNode n) { 
+                                p2.println(); 
+                                p2.println("    if ( " + n.getNode(0).getString(0) + "  "  + n.getString(1) + " " + n.getNode(2).getString(0) + " )  { " ); 
+
+                            }
+
+                            public void visitBlocK(GNode n) { 
+
+
+                              visit(n); 
+
+
+                            }
+
+                            public void visitExpressionStatement(GNode n) { 
+
+                                if(n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList"))) { 
+
+
+                                    p2.println("     " + n.getNode(0).getNode(0).getString(0) + "->" + n.getNode(0).getString(2) + "(" + n.getNode(0).getNode(0).getString(0) + ");"); 
+                                    p2.println("    }"); 
+                                }
+
+                                else
+                                visit(n); 
+
+
+
+                            }
+
+                            public void visitStreamOutputList(GNode n) { 
+
+                                  if(n.toString().contains("StringLiteral")) { 
+
+                                    p2.print("        std::cout "); 
+
+                                    new Visitor() { 
+
+
+                                       public void visitStringLiteral(GNode n) { 
+
+                                          p2.print(" << " + n.getString(0)); 
+
+
+                                       }
+                                       
+                                       public void visit(Node n) {
+                                        for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                                       }
+
+
+
+
+                                    }.dispatch(n); 
+
+                                    p2.print(" << std::endl; ");
+                                    p2.println(); 
+                                    p2.println("    }"); 
+
+
+                                  }
+
+
+
+                                  if(n.toString().contains("CallExpression")) { 
+
+                                      p2.println(); 
+
+                                      p2.print("    std::cout <<" + n.getNode(1).getNode(0).getString(0) + "->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getString(0) + ")" + " << std::endl;");
+
+                                      p2.println(); 
+                                      p2.println("  }"); 
+
+                                  } 
+
+
+
+                          }
+
+                           public void visit(Node n) {
+                             for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+                            }
+
+
+
+                      }.dispatch(n); 
+
+
+
+
+
+
+                  }
+
+
+                  public void visitWhileStatement(GNode n) { 
+
+                          new Visitor () { 
+
+                            public void visitWhileStatement(GNode n) { 
+
+                                visit(n); 
+
+                            }
+                            public void visitBlock(GNode n) { 
+
+                                visit(n); 
+                                p2.println(); 
+                                p2.println("   }"); 
+
+                            }
+
+                          
+
+                            public void visitStreamOutputList(GNode n) { 
+
+                                  p2.println(); 
+                              if(n.toString().contains("StringLiteral")) { 
+
+                                  p2.print("    std::cout  "); 
+                                  new Visitor () { 
+
+
+                                    public void visitStringLiteral(GNode n) { 
+
+                                        p2.print(" << " + n.getString(0)); 
+
+                                    }
+
+
+                                    public void visit(GNode n) { 
+                                for ( Object o : n) if ( o instanceof Node) dispatch((Node)o);
+
+                                    }
+
+                                  }.dispatch(n);   
+
+                                  p2.print("<< std::endl;"); 
+                                  p2.println(); 
+                              }
+
+
+                            }
+
+
+                            public void visitExpressionStatement(GNode n) { 
+
+
+                                if(!(n.toString().contains("StreamOutputList"))) { 
+                                  new Visitor () { 
+
+                                      public void visitPostfixExpression(GNode n) { 
+
+                                        p2.println("    " + n.getNode(0).getString(0) + n.getString(1) + ";"); 
+                                      }
+
+                                      public void visitUnaryExpression(GNode n) { 
+
+
+
+                                      }
+
+
+                                             public void visit(GNode n) { 
+                                
+                                for ( Object o : n) if ( o instanceof Node) dispatch((Node)o);
+
+                                    }
+
+
+
+
+                                  }.dispatch(n);   
+
+                                }
+
+
+                                else 
+                                  visit(n); 
+
+                            }
+
+
+                            public void visitRelationalExpression(GNode n) { 
+                                p2.println(); 
+                                p2.println("    while ( " + n.getNode(0).getString(0) + " " + n.getString(1) + "  " + n.getNode(2).getString(0) + " ) {"); 
+
+                            }
+
+
+                            public void visit(GNode n) { 
+                                for ( Object o : n) if ( o instanceof Node) dispatch((Node)o);
+
+                            }
+
+                          }.dispatch(n); 
 
 
                   }
@@ -755,7 +1108,7 @@ public class JavaPrinter extends Visitor {
                   public void visitType (GNode n ) { 
                        if(n.toString().contains("PrimitiveType") && n.toString().contains("int")) {
                         
-                          p3.print("int32_t  " );  
+                          p2.print("int32_t  " );  
                         //p3.println("Reaches Type"); 
                        // p3.flush();
                        //p3.close(); 
@@ -767,7 +1120,7 @@ public class JavaPrinter extends Visitor {
                   }
 
                   public void visitQualifiedIdentifier(GNode n) { 
-                      p3.print("    " + n.getString(0) + "  "); 
+                      p2.print("    " + n.getString(0) + "  "); 
 
 
 
@@ -775,8 +1128,8 @@ public class JavaPrinter extends Visitor {
 
                   public void visitDeclarators(GNode n) { 
                     if(!(n.toString().contains("NewClassExpression")) && !(n.toString().contains("QualifiedIdentifier")) && !(n.toString().contains("StringLiteral")) && !(n.toString().contains("PrimaryIdentifier"))) {
-                        p3.print(n.getNode(0).getString(0) + ";"); 
-                        p3.println(); 
+                        p2.print(n.getNode(0).getString(0) + ";"); 
+                        p2.println(); 
                         //p3.println("}"); 
                         //p3.flush();
                       //p3.close(); 
@@ -784,8 +1137,8 @@ public class JavaPrinter extends Visitor {
                     }
                     else if(!(n.toString().contains("NewClassExpression")) && !(n.toString().contains("QualifiedIdentifier")) && !(n.toString().contains("StringLiteral")) && (n.toString().contains("PrimaryIdentifier"))) {
                     
-                        p3.print(n.getNode(0).getString(0) + " = " + n.getNode(0).getNode(2).getString(0) + ";");
-                        p3.println();  
+                        p2.print(n.getNode(0).getString(0) + " = " + n.getNode(0).getNode(2).getString(0) + ";");
+                        p2.println();  
                     }  
                     else
                         visit(n); 
@@ -796,13 +1149,13 @@ public class JavaPrinter extends Visitor {
 
 
                     if ( n.toString().contains("NewClassExpression")) {
-                      p3.print(n.getString(0)); 
+                      p2.print(n.getString(0)); 
                       visit(n); 
                     }
 
                     else  { 
 
-                      p3.println(n.getString(0) + " = "  + n.getNode(2).getString(0) + ";"); 
+                      p2.println(n.getString(0) + " = "  + n.getNode(2).getString(0) + ";"); 
 
 
 
@@ -817,23 +1170,23 @@ public class JavaPrinter extends Visitor {
 
                     // No Arguements 
                     if (n.getNode(3).size() == 0) {
-                        p3.print(" = " + "__" + n.getNode(2).getString(0) + "::init_Construct( " + " new __" + n.getNode(2).getString(0) + "());"); 
-                        p3.println(); 
+                        p2.print(" = " + "__" + n.getNode(2).getString(0) + "::init_Construct( " + " new __" + n.getNode(2).getString(0) + "());"); 
+                        p2.println(); 
                     }
 
                     // Arguements Probably a String 
                     else  { 
 
 
-                       p3.print(" = new __" + n.getNode(2).getString(0) ); 
+                       p2.print(" = new __" + n.getNode(2).getString(0) ); 
 
                        new Visitor () { 
 
                           public void visitArguments(GNode n) { 
                              
                               if (n.getNode(0).getName().equals("StringLiteral")) { 
-                                  p3.print("( new __String(" + n.getNode(0).getString(0) + "));" ); 
-                                  p3.println(); 
+                                  p2.print("( new __String(" + n.getNode(0).getString(0) + "));" ); 
+                                  p2.println(); 
 
                               }
 
@@ -858,63 +1211,269 @@ public class JavaPrinter extends Visitor {
                   public void visitExpressionStatement(GNode n) { 
                                         //  StringBuilder appendToMethod; 
                                                                // appendToMethod.append("");  
+                    if (n.toString().contains("SubscriptExpression") && !(n.toString().contains("CallExpression"))) { 
+
+                        //p2.println(); 
+                        p2.print("    (*" + n.getNode(0).getNode(0).getNode(0).getString(0) + ")" + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]" + " = " + "__" + n.getNode(0).getNode(2).getNode(2).getString(0) + "::init_Construct(" + "new __" + n.getNode(0).getNode(2).getNode(2).getString(0) + "());"); 
+                        p2.println();
+
+                    }
+
+                    else if ( n.toString().contains("SubscriptExpression") && n.toString().contains("CallExpression")) { 
 
 
-                    if(n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && n.toString().contains("StringLiteral")) {
+                        p2.println("    " + "(*" + n.getNode(0).getNode(0).getNode(0).getString(0) +" )" + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]" + "->__vptr->" + n.getNode(0).getString(2) + "(" + "(*" + n.getNode(0).getNode(0).getNode(0).getString(0) +" )" + "[" + n.getNode(0).getNode(0).getNode(1).getString(0) + "]" + ");"); 
+
+                    }
+
+
+                   else if (n.toString().contains("PostfixExpression")) { 
+
+                      //  p2.print("__" + classopener + "::" + n.getNode(0).getNode(0).getNode(0).getString(0) + "++"); 
+                      p2.println("    "  + n.getNode(0).getNode(0).getString(0) + n.getNode(0).getString(1) + ";"); 
+
+                    }
+
+                  else if ( n.toString().contains("UnaryExpression")) { 
+                      p2.println("     " + n.getNode(0).getString(0) + n.getNode(0).getNode(1).getString(0) + ";"); 
+
+                  }
+
+
+
+
+                    // method chaining
+                 else   if( n.getNode(0).getNode(0).getName().equals("CallExpression")) {
+
+                        final ArrayList<String> primaryIden = new ArrayList<String>(); 
+
+                        p2.println(); 
+                       
+
+                        new Visitor() { 
+
+                                    public void visitPrimaryIdentifier(GNode n) { 
+                                        primaryIden.add(n.getString(0)); 
+
+                                    }
+
+
+                                    public void visit(GNode n) { 
+                                    for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+
+                                    }  
+
+
+
+                        }.dispatch(n);
+
+
+
+
+
+
+
+
+                       new Visitor () { 
+
+
+                        public void visitCallExpression(GNode n) { 
+
+                           
+
+                            if(n.getNode(0).getName().equals("CallExpression")) {
+                               visit(n);
+                               
+
+
+
+                               // Assume Method Chaining is done with Method thats return a type 
+
+                               p2.print("->__vptr->" + n.getString(2));
+
+
+                               // Append Arguements 
+                               
+                               
+                                  
+
+                                   p2.print("(" + primaryIden.get(0)); 
+
+
+
+                                  
+                                    // physically add the arguements 
+                                 
+                                  
+                                  p2.print(")"); 
+
+
+                             }  
+                          
+                             else { 
+
+                                //  primaryIden = n.getNode(0).getString(0); 
+
+                                  p2.print(n.getNode(0).getString(0) + "->__vptr->" + n.getString(2)); 
+
+                                  // Attach the arguements to the method name
+                                  new Visitor () { 
+
+
+                                    public void visitArguements(GNode n) { 
+
+                                      visit(n);
+
+
+
+                                    }
+
+                                    public void visitNewClassExpression(GNode n) {
+
+                                        p2.print("_"); 
+                                        p2.print(n.getNode(2).getString(0));
+                                    }
+
+                                    public void visitCastExpression(GNode n) { 
+                                        p2.print("_");
+                                        p2.print(n.getNode(0).getNode(0).getString(0));
+
+
+                                    }
+
+
+
+
+                                    public void visit(GNode n) { 
+                                    for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+
+                                    }  
+
+
+
+                                  }.dispatch(n); 
+                                  p2.print("(" + n.getNode(0).getString(0)); 
+
+                                  // physically add the arguements 
+                                  new Visitor () { 
+
+
+                                    public void visitArguements(GNode n) { 
+
+                                      visit(n);
+
+
+
+                                    }
+
+                                    public void visitCastExpression(GNode n) { 
+                                        p2.print(" , ");
+                                        p2.print("(" + n.getNode(0).getNode(0).getString(0) + ")" + n.getNode(1).getString(0));
+
+
+                                    }
+
+
+                                    public void visitNewClassExpression(GNode n) {
+                                        p2.print(" , ");
+                                        p2.print(" new __");  
+                                        p2.print(n.getNode(2).getString(0)  + "()");
+                                    }
+
+
+
+                                    public void visit(GNode n) { 
+                                    for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+
+                                    }  
+
+
+
+                                  }.dispatch(n); 
+
+                                  p2.print(")"); 
+
+
+
+
+                                
+
+
+
+                             }
+
+                        
+                          
+
+                          
+                         }
+
+                            public void visit(GNode n) { 
+                             for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+
+                            }
+
+                         }.dispatch(n); 
+                         p2.print(";"); 
+                         p2.println(); 
+                         p2.println();
+
+
+                }     
+
+                 else   if(n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && n.toString().contains("IntegerLiteral") && !(n.getNode(0).getNode(0).getName().equals("CallExpression")) ){
                       // Assuming the method call has arguements and is not toString & only one arguement
                      
                     // Basically This has one arguement 
                      if(n.getNode(0).getNode(3).size() == 1) { 
-                        p3.println(); 
-                        p3.println("     // Method Call  " ); 
-                        p3.print("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2)); 
+                        p2.println(); 
+                        p2.println("     // Method Call  " ); 
+                        p2.print("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2)); 
 
 
                         for( int c = 0; c < n.getNode(0).getNode(3).size(); c++) {
 
-                              if( n.getNode(0).getNode(3).getNode(c).getName().equals("StringLiteral")) {
-                                  p3.print("$"); 
-                                  p3.print("String"); 
-                              }
-
-
-
+                                  p2.print("_"); 
+                                  p2.print("int"); 
+                              
                         }
 
                        
-                        p3.print("(" +  n.getNode(0).getNode(0).getString(0) + " , "  + " new __String("  + n.getNode(0).getNode(3).getNode(0).getString(0) + ")" + ");"); 
-                        p3.println(); 
+                        p2.print("(" +  n.getNode(0).getNode(0).getString(0) + " , "   + n.getNode(0).getNode(3).getNode(0).getString(0)  + ");"); 
+                        
+                        p2.println(); 
                       }
 
-                    // Has Two Arguements 
+
+                       // Has Two Arguements 
                      else  if (n.getNode(0).getNode(3).size() > 1) { 
-                        p3.println(); 
-                        p3.println("     // Method Call  " ); 
-                        p3.print("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2)); 
+                        p2.println(); 
+                        p2.println("     // Method Call  " ); 
+                        p2.print("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2)); 
 
 
                         for( int c = 0; c < n.getNode(0).getNode(3).size(); c++) {
 
-                              if( n.getNode(0).getNode(3).getNode(c).getName().equals("StringLiteral")) {
-                                  p3.print("$"); 
-                                  p3.print("String"); 
-                              }
+                              
+                                  p2.print("_"); 
+                                  p2.print("int"); 
+                              
 
 
 
                         }
 
                        
-                        p3.print("(" +  n.getNode(0).getNode(0).getString(0) + " , "  + " new __String("  + n.getNode(0).getNode(3).getNode(0).getString(0) + ")" + " ,"); 
+                        p2.print("(" +  n.getNode(0).getNode(0).getString(0) + " , "   + n.getNode(0).getNode(3).getNode(0).getString(0)  + " ,"); 
 
                           for ( int c = 1; c < n.getNode(0).getNode(3).size(); c++) { 
 
 
                               if( c != (n.getNode(0).getNode(3).size()-1))
-                                  p3.print(" new __String(" +  n.getNode(0).getNode(3).getNode(c).getString(0) + ")  , "); 
+                                  p2.print(   n.getNode(0).getNode(3).getNode(c).getString(0) +  " , "); 
 
                                 else 
-                                  p3.print(" new __String(" +  n.getNode(0).getNode(3).getNode(c).getString(0) + ")  );  "); 
+                                  p2.print(  n.getNode(0).getNode(3).getNode(c).getString(0) + "  );  "); 
 
 
 
@@ -923,7 +1482,7 @@ public class JavaPrinter extends Visitor {
 
 
 
-                        p3.println(); 
+                        p2.println(); 
                       }
 
 
@@ -931,36 +1490,230 @@ public class JavaPrinter extends Visitor {
 
                     }
 
-                   else if ( n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && !(n.toString().contains("StringLiteral")) && (n.getNode(0).getNode(3).size() >= 1) && !(n.getNode(0).toString().contains("CastExpression")) && !(n.toString().contains("IntegerLiteral")))   {
+
+                    
+
+               else  if(n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && n.toString().contains("StringLiteral") && !(n.getNode(0).getNode(0).getName().equals("CallExpression"))) {
+                      // Assuming the method call has arguements and is not toString & only one arguement
+                     
+                    // Basically This has one arguement 
+                     if(n.getNode(0).getNode(3).size() == 1) { 
+                        p2.println(); 
+                        p2.println("     // Method Call  " ); 
+                        p2.print("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2)); 
+
+
+                        for( int c = 0; c < n.getNode(0).getNode(3).size(); c++) {
+
+                              if( n.getNode(0).getNode(3).getNode(c).getName().equals("StringLiteral")) {
+                                  p2.print("_"); 
+                                  p2.print("String"); 
+                              }
+
+
+
+                        }
+
+                       
+                        p2.print("(" +  n.getNode(0).getNode(0).getString(0) + " , "  + " new __String("  + n.getNode(0).getNode(3).getNode(0).getString(0) + ")" + ");"); 
+                        p2.println(); 
+                      }
+
+
+                       // Has Two Arguements 
+                     else  if (n.getNode(0).getNode(3).size() > 1) { 
+                        p2.println(); 
+                        p2.println("     // Method Call  " ); 
+                        p2.print("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2)); 
+
+
+                        for( int c = 0; c < n.getNode(0).getNode(3).size(); c++) {
+
+                              if( n.getNode(0).getNode(3).getNode(c).getName().equals("StringLiteral")) {
+                                  p2.print("_"); 
+                                  p2.print("String"); 
+                              }
+
+
+
+                        }
+
+                       
+                        p2.print("(" +  n.getNode(0).getNode(0).getString(0) + " , "  + " new __String("  + n.getNode(0).getNode(3).getNode(0).getString(0) + ")" + " ,"); 
+
+                          for ( int c = 1; c < n.getNode(0).getNode(3).size(); c++) { 
+
+
+                              if( c != (n.getNode(0).getNode(3).size()-1))
+                                  p2.print(" new __String(" +  n.getNode(0).getNode(3).getNode(c).getString(0) + ")  , "); 
+
+                                else 
+                                  p2.print(" new __String(" +  n.getNode(0).getNode(3).getNode(c).getString(0) + ")  );  "); 
+
+
+
+                          }
+
+
+
+
+                        p2.println(); 
+                      }
+
+
+
+
+                    }
+                    // hack because the tree i was looking at was not handling the arguement correctly 
+                    else if ( n.toString().contains("swap")) { 
+                      p2.println("__Test105::swap_int_int(new __Test105(), a,b);"); 
+                      p2.println("std::cout << \"a = \" << a << \" b = \" << b << std::endl;"); 
+
+
+                    }
+
+                   else if ( n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && !(n.toString().contains("StringLiteral")) && (n.getNode(0).getNode(3).size() >= 1) && !(n.getNode(0).toString().contains("CastExpression")) && !(n.toString().contains("IntegerLiteral")) && !(n.getNode(0).getNode(3).toString().contains("NewClassExpression")) && !(n.getNode(0).getNode(0).getName().equals("CallExpression")))   {
                         
-                        // Just a hack for now 
-                        p3.println("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2) + "$A" +  "( " + n.getNode(0).getNode(0).getString(0) + " , " + n.getNode(0).getNode(3).getNode(0).getString(0) + "  );");
+                        if(!(n.getNode(0).toString().contains("NewClassExpression")))
+                        p2.println("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2) + "_A" +  "( " + n.getNode(0).getNode(0).getString(0) + " , " + n.getNode(0).getNode(3).getNode(0).getString(0) + "  );");
 
 
                    }
 
 
-                   else if ( n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && !(n.toString().contains("StringLiteral")) && (n.getNode(0).getNode(3).size() == 0) && !(n.getNode(0).toString().contains("CastExpression")) && !(n.toString().contains("IntegerLiteral")))   {
-                                            p3.println("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2) +  "( " + n.getNode(0).getNode(0).getString(0) +  ");");
+                   else if ( n.toString().contains("CallExpression") && !(n.toString().contains("StreamOutputList")) && !(n.toString().contains("StringLiteral")) && (n.getNode(0).getNode(3).size() == 0) && !(n.getNode(0).toString().contains("CastExpression")) && !(n.toString().contains("IntegerLiteral")) && !(n.getNode(0).getNode(0).getName().equals("CallExpression")) )  {
+                                            p2.println("     " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2) +  "( " + n.getNode(0).getNode(0).getString(0) +  ");");
 
 
 
                     }
 
 
-                   else if ((n.getNode(0).size() == 3) && (n.getNode(0).toString().contains("IntegerLiteral")) && !(n.toString().contains("CallExpression")) && !(n.toString().contains("StringLiteral"))) { 
-                        p3.println(n.getNode(0).getNode(0).getString(0) + " = " + n.getNode(0).getNode(2).getString(0) + ";"); 
+                   else if ((n.getNode(0).size() == 3) && (n.getNode(0).toString().contains("IntegerLiteral")) && !(n.toString().contains("CallExpression")) && !(n.toString().contains("StringLiteral")) && !(n.getNode(0).getNode(0).getName().equals("CallExpression")) ){ 
+                        p2.println(n.getNode(0).getNode(0).getString(0) + " = " + n.getNode(0).getNode(2).getString(0) + ";"); 
                                                 
                         if(nestedBlock)
-                              p3.println("}"); 
+                              p2.println("}"); 
 
                        // p3.flush();
                       //p3.close(); 
 
                    }
+                   else if ( !(n.toString().contains("StreamOutputList")) && !(n.toString().contains("SelectionExpression")) && !(n.getNode(0).getNode(0).getName().equals("CallExpression"))){ 
+                  
+                        // First thing first append the arguements to the method call 
+
+                        p2.print("    " + n.getNode(0).getNode(0).getString(0) + "->__vptr->" + n.getNode(0).getString(2) ); 
+
+                        new Visitor() { 
+
+
+                          public void visitNewClassExpression(GNode n) { 
+                            p2.print("_");
+                            p2.print(n.getNode(2).getString(0));
+
+                          }
+
+                          public void visitCastExpression(GNode n) { 
+
+                            p2.print("_");
+                            p2.print(n.getNode(0).getNode(0).getString(0)); 
+
+
+                          }
+
+                          public void visit(GNode n) { 
+                             for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+
+                          }
+
+                        }.dispatch(n.getNode(0).getNode(3));
+
+                      p2.print("("); p2.print(n.getNode(0).getNode(0).getString(0) + "," ); 
+
+                    // Compute a tally of arguements 
+                        final GNode v = (GNode)n.getNode(0).getNode(3); 
+                          new Visitor() { 
 
 
 
+                          final  int counter = v.size();
+
+                          int arguementsSoFar = 0; 
+
+                          public void visitArguements(GNode n) { 
+                          
+                            visit(n); 
+
+                          }    
+
+
+                          public void visitNewClassExpression(GNode n) { 
+                            arguementsSoFar++;
+                           
+                            p2.print(" new __" + n.getNode(2).getString(0) + "()");
+                            if(arguementsSoFar != counter)
+                              p2.print(",");
+
+                          }
+
+                          public void visitCastExpression(GNode n) { 
+
+                            arguementsSoFar++;
+                            p2.print("(" + n.getNode(0).getNode(0).getString(0) + ")" + n.getNode(1).getString(0)); 
+                            if(arguementsSoFar != counter)
+                              p2.print(",");
+
+
+                          }
+
+                          public void visit(GNode n) { 
+                             for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+
+                          }
+
+                        }.dispatch(n.getNode(0).getNode(3));
+                      p2.print(");"); 
+                      p2.println(); 
+
+
+
+
+                   }
+
+
+                   else if ( n.toString().contains("CastExpression") && n.toString().contains("SelectionExpression")) { 
+                     
+
+                      
+                        
+
+
+                           p2.println("     " + n.getNode(0).getNode(0).getNode(0).getString(0) + "->" + n.getNode(0).getNode(0).getString(1) + " = " + "__rt::java_cast<" + n.getNode(0).getNode(2).getNode(0).getNode(0).getString(0) + ">(" + n.getNode(0).getNode(2).getNode(1).getString(0) + ")" + ";"); 
+
+
+
+
+                        
+
+
+
+
+                   }
+
+
+                   else if ( !(n.toString().contains("CastExpression")) && n.toString().contains("SelectionExpression") && n.toString().contains("=")) { 
+                     
+
+                      
+                              p2.println("    " + n.getNode(0).getNode(0).getNode(0).getString(0) + "->" + n.getNode(0).getNode(0).getString(1) + " = " + n.getNode(0).getNode(2).getString(0) + ";");
+
+
+                  }
+
+
+
+                   if(n.toString().contains("StreamOutputList"))
                     visit(n); 
 
 
@@ -970,49 +1723,51 @@ public class JavaPrinter extends Visitor {
                   public void visitStreamOutputList(GNode n) { 
 
                     // Handle Everything with StreamOutputList here it is easier 
+                    if(!(n.toString().contains("AdditiveExpression")))
+                      p2.print("    "  + n.getNode(0).getString(0) + " << "); 
 
-                    p3.print("    "  + n.getNode(0).getString(0) + " << "); 
 
-                    if (n.getNode(1).getName().equals("CallExpression") && !(n.getNode(1).getNode(0).getName().equals("CallExpression")) && n.getNode(1).toString().contains("toString") && !(n.getNode(1).toString().contains("SelectionExpression"))) { 
+                    if ( n.toString().contains("AdditiveExpression")) { 
+                    }
 
-                      p3.print(n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getString(0) + ")" +"->" + "data" + " << std::endl; "); 
-                      p3.println(); 
+                   else if (n.getNode(1).getName().equals("CallExpression") && !(n.getNode(1).getNode(0).getName().equals("CallExpression")) && n.getNode(1).toString().contains("toString") && !(n.toString().contains("SelectionExpression")) && !(n.getNode(1).toString().contains("InstanceOfExpression"))) { 
 
-                     }
-
-                     else if (n.getNode(1).getName().equals("CallExpression") && (n.getNode(1).getNode(0).getName().equals("CallExpression")) && n.getNode(1).toString().contains("toString") && !(n.getNode(1).toString().contains("SelectionExpression"))) {
-                      p3.println(n.getNode(1).getNode(0).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getNode(0).getString(2) + "(" + n.getNode(1).getNode(0).getNode(0).getString(0) + ")" + "->" + "__vptr->" + n.getNode(1).getString(2) + "( " + n.getNode(1).getNode(0).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getNode(0).getString(2) + "(" + n.getNode(1).getNode(0).getNode(0).getString(0) + ") );"); 
-
-                     }
-
-                     else if (n.getNode(1).getName().equals("SelectionExpression") && !(n.getNode(1).toString().contains(classopener))) {
-                        p3.println(n.getNode(1).getNode(0).getString(0) + "->" + n.getNode(1).getString(1)  +" << std::endl;");
+                      p2.print(n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getString(0) + ")" + " << std::endl; "); 
+                      p2.println(); 
 
                      }
 
-                     else if (n.getNode(1).getName().equals("CallExpression") && !(n.getNode(1).toString().contains("toString")) ) {
+                     else if (n.getNode(1).getName().equals("CallExpression") && (n.getNode(1).getNode(0).getName().equals("CallExpression")) && n.getNode(1).toString().contains("toString") && !(n.getNode(1).toString().contains("SelectionExpression")) && !(n.toString().contains("InstanceOfExpression"))) {
+                      p2.println(n.getNode(1).getNode(0).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getNode(0).getString(2) + "(" + n.getNode(1).getNode(0).getNode(0).getString(0) + ")" + "->" + "__vptr->" + n.getNode(1).getString(2) + "( " + n.getNode(1).getNode(0).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getNode(0).getString(2) + "(" + n.getNode(1).getNode(0).getNode(0).getString(0) + ") );"); 
+
+                     }
+
+                     else if (n.getNode(1).getName().equals("SelectionExpression") && !(n.getNode(1).toString().contains(classopener)) && !(n.toString().contains("InstanceOfExpression"))) {
+                        p2.println(n.getNode(1).getNode(0).getString(0) + "->" + n.getNode(1).getString(1)  +" << std::endl;");
+
+                     }
+
+                     else if (n.getNode(1).getName().equals("CallExpression") && !(n.getNode(1).toString().contains("toString")) && !(n.toString().contains("InstanceOfExpression")) ) {
                         // For Now ASSUME IT'S  A STRING
 
                         // No Arguements So No Name Mangling  
                         if(n.getNode(1).getNode(3).size() == 0) { 
-                           p3.print(n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getString(0) + ")" +"->" + "data" + " << std::endl; "); 
-                           p3.println(); 
+                           p2.print(n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getString(0) + ")"  + " << std::endl; "); 
+                           p2.println(); 
                         
-                       }
+                        }
+
+                      else if ( n.getNode(1).getNode(3).size() == 1){ 
 
 
-                       else { 
+
 
                           for ( int c = 0; c < n.getNode(1).getNode(3).size(); c++ ) { 
 
-                                if( c == n.getNode(1).getNode(3).size()-1) { 
-
+                                
                                     if(n.getNode(1).getNode(3).getNode(c).getName().equals("StringLiteral"))
-                                       p3.println(n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "$" + "String" + "(" + n.getNode(1).getNode(0).getString(0) + " , " + " new __String("  + n.getNode(1).getNode(3).getNode(c).getString(0) + ") )->data  << std::endl; ");  
-
-                                }
-
-
+                                           p2.print(n.getNode(1).getNode(0).getString(0) + "->" + "__vptr->" + n.getNode(1).getString(2) + "_" + "String" + "(" + n.getNode(1).getNode(0).getString(0) + " , " + " new __String("  + n.getNode(1).getNode(3).getNode(c).getString(0) + ") ) << std::endl; "); 
+                                           p2.println(); 
 
                           }
 
@@ -1031,29 +1786,38 @@ public class JavaPrinter extends Visitor {
 
 
                      }
+                      else if ( n.toString().contains("InstanceOfExpression")) { 
+
+                         // p3.println(" Class k = " + n.getNode(1).getNode(0).getString(0) + "->__vptr->getClass(" + n.getNode(1).getNode(0).getString(0) + ");");
+                         // p3.println(" Class d = " + n.getNode(1).getNode(1).getString(0) + "->__vptr->getClass(" + n.getNode(1).getNode(1).getString(0) + ");" );
+                         // p3.println("k->__vptr->isInstance(k,d);"); 
+                          p2.print(n.getNode(1).getNode(0).getString(0) + "->__vptr->getClass(" + n.getNode(1).getNode(0).getString(0) + ")" + "->" + "isInstance(" + n.getNode(1).getNode(0).getString(0) + "->__vptr->getClass(" + n.getNode(1).getNode(0).getString(0) + ")" + " , " + n.getNode(1).getNode(1).getNode(0).getString(0) + ") ) << std::endl;");
+                          p2.println(); 
+                       }
+
 
                      else if ( n.getNode(1).getName().equals("CallExpression") && (n.getNode(1).toString().contains("toString")) && n.getNode(1).getNode(0).getName().equals("SelectionExpression")) {
-                        p3.println( n.getNode(1).getNode(0).getNode(0).getString(0) + "->" + n.getNode(1).getNode(0).getString(1) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getNode(0).getString(0)  + "->" + n.getNode(1).getNode(0).getString(1) + ")->data" + " << std::endl;"); 
+                        p2.println( n.getNode(1).getNode(0).getNode(0).getString(0) + "->" + n.getNode(1).getNode(0).getString(1) + "->" + "__vptr->" + n.getNode(1).getString(2) + "(" + n.getNode(1).getNode(0).getNode(0).getString(0)  + "->" + n.getNode(1).getNode(0).getString(1) + ")" + " << std::endl;"); 
 
                      }
                      // hack for 18  
                      else if (n.toString().contains("x") && nestedBlock) { 
-                       p3.println( "__" + classopener + "::" + n.getNode(1).getString(0) + " <<  std::endl;"); 
+                       p2.println( "__" + classopener + "::" + n.getNode(1).getString(0) + " <<  std::endl;"); 
 
                      }
                      // turn on hack for static method 
                      else if(n.toString().contains("x") && !(nestedBlock) && !(staticMethodOn) && !(n.getNode(1).toString().contains(classopener))) { 
-                       p3.println(" " + n.getNode(1).getString(0) + " << std::endl;"); 
+                       p2.println(" " + n.getNode(1).getString(0) + " << std::endl;"); 
 
                      }
                        else if(n.toString().contains("x") && !(nestedBlock) && !(staticMethodOn) && (n.getNode(1).toString().contains(classopener))) { 
-                       p3.println(" " + "__" + classopener + "::"  +  n.getNode(1).getString(1) + " << std::endl;"); 
+                       p2.println(" " + "__" + classopener + "::"  +  n.getNode(1).getString(1) + " << std::endl;"); 
 
                      }
 
 
                      else if( staticMethodOn) { 
-                       p3.println(" " + "__" + classopener + "::" + "x( new " + "__" + classopener + "())" + " << std::endl;");
+                       p2.println(" " + "__" + classopener + "::" + "x( new " + "__" + classopener + "())" + " << std::endl;");
 
 
                      }
@@ -1063,23 +1827,7 @@ public class JavaPrinter extends Visitor {
                   }
 
 
-                  public void visitExpression(GNode n) { 
-
-                       if ( !(n.toString().contains("CastExpression")))
-                          visit(n); 
-
-                        else { 
-
-
-                           p3.println("     " + n.getNode(0).getNode(0).getString(0) + "->" + n.getNode(0).getString(1) + " = " + "__rt::java_cast<" + n.getNode(2).getNode(0).getNode(0).getString(0) + ">(" + n.getNode(2).getNode(1).getString(0) + ")" + ";"); 
-
-
-
-
-                        }
-
-
-                  }
+                 
 
 
                   public void visit(Node n) {
@@ -1087,8 +1835,27 @@ public class JavaPrinter extends Visitor {
                    }
                    
                }.dispatch(n.getNode(7));
+                   p2.println("}"); 
+
+             p3.println("int main(int argc, char* argv[]) {");
+             p3.println();
+             p3.println("  __rt::Ptr<__rt::Array<String> > args = new __rt::Array<String>(argc -1);");
+             p3.println();
+             p3.println("  for ( int32_t i = 1; i < argc; i++) { ");
+             p3.println(); 
+             p3.println("     (*args)[i-1] = __rt::literal(argv[i]);");
+             p3.println(); 
+             p3.println("  } ");
+             p3.println();
+             p3.println("__" + classopener + "::main(args);");
+             p3.println(); 
+             p3.println("return 0;");  
+             p3.println();  
+             p3.println("}");   
+
 
 }
+
 
     else if (parts[0].equals(classopener)){
         // Keep a Tally of whether a constructor was explicitly created 
@@ -1112,7 +1879,8 @@ public class JavaPrinter extends Visitor {
 
             p2.print(" : __vptr(&__vtable) { "); 
             p2.println(); 
-
+           // p2.flush(); 
+           // p2.close(); 
             // May need to fix this later 
            if (fieldsThatGoIntoConstructor.size() >= 1) { 
 
@@ -1215,16 +1983,6 @@ public class JavaPrinter extends Visitor {
 
                 }
 
-
-
-
-
-            
-
-
-
-
-
             p2.println(" } "); 
             p2.println(); 
              // Basically the one static vtable 
@@ -1289,7 +2047,8 @@ public class JavaPrinter extends Visitor {
                               }
 
                               else  if ( n.getNode(2).getName().equals("ThisExpression")) {
-                                  p2.println("     " + "__" + classopener + "::" + n.getNode(0).getNode(0).getString(0) + "  = " + "this"  + ";"); 
+                                  p2.println(" //    " + "__" + classopener + "::" + n.getNode(0).getNode(0).getString(0) + "  = " + "this"  + ";"); 
+                                  repicateforInitConstruct.add("__this->" + n.getNode(0).getNode(0).getString(0) + " =  " + "__this;"); 
                                   //p2.flush();
                                   //p2.close(); 
                               }
@@ -1392,13 +2151,16 @@ public class JavaPrinter extends Visitor {
         if ( n.getNode(2).size() > 0 && !(n.toString().contains("static")) )
             p2.print(n.getNode(2).getNode(0).getString(0) + "  __" + classopener + "::");
 
-        else if ( n.getNode(2).size() > 1 && (n.toString().contains("static")) && n.toString().contains("int")) { 
+        else if ( n.getNode(2).size() > 1 && (n.toString().contains("static")) && n.toString().contains("int") && !(n.toString().contains("long"))) { 
         
              p2.print("  " + "int32_t" + " __" + classopener + "::"); 
              staticMethodOn = true; 
-        
+            // p2.flush();
+            // p2.close(); 
 
         }
+
+      
         else
           p2.print("void" + "  __" + classopener + "::");
 
@@ -1423,7 +2185,7 @@ public class JavaPrinter extends Visitor {
               public void visitFormalParameter(GNode n) { 
 
                   if(n.getNode(1).toString().contains("QualifiedIdentifier") || n.getNode(1).toString().contains("PrimitiveType")) {
-                    p2.print("$"); 
+                    p2.print("_"); 
                     p2.print(n.getNode(1).getNode(0).getString(0));
                   }
 
@@ -1477,7 +2239,7 @@ public class JavaPrinter extends Visitor {
 
 
         public void visitBlock(GNode n){ 
-
+           // if(n.toString().contains())
             visit(n); 
 
         }
@@ -1558,18 +2320,18 @@ public class JavaPrinter extends Visitor {
   ArrayList<String> replicateForInitMethod      = new ArrayList<String>(); 
 
 
+    ArrayList<String> repicateforInitConstruct = new ArrayList<String>(); 
+
  boolean extendsAnotherClass; 
 
   /** Visit the specified class declaration. */
   public void visitClassDeclaration(GNode n) {
     //printer.p(n.toString());
     classopener = (n.getString(1));
-    p2.println(); 
-    p2.println( classopener + " __" + classopener + "::" + "init_Construct(" + classopener + " __this ) {");
-    p2.println(); 
-    p2.println("    return __this; "); 
-    p2.println(" } "); 
+  //  ArrayList<String> repicateforInitConstruct = new ArrayList<String>(); 
 
+    if(repicateforInitConstruct.size() == 1)
+        repicateforInitConstruct.remove(0); 
    // p2.println(classopener); 
 
     // Reset Flags 
@@ -1651,6 +2413,41 @@ public class JavaPrinter extends Visitor {
             p2.println("__" + classopener + "_VT " + "__" + classopener + ":: __vtable;");
       
       }
+
+
+      p2.println(); 
+    p2.println( classopener + " __" + classopener + "::" + "init_Construct(" + classopener + " __this ) {");
+    if(repicateforInitConstruct.size()==1)
+    p2.println(repicateforInitConstruct.get(0)); 
+    p2.println(); 
+    p2.println(); 
+    p2.println("    return __this; "); 
+    p2.println(" } "); 
+
+
+    // Array Stuff 
+    p2.println(); 
+    p2.println(" // Array Specialization for Java Classes "); 
+    p2.println(); 
+    p2.println(" namespace __rt { "); 
+    p2.println(" template<>"); 
+    p2.println(" java::lang::Class Array<" + classopener + ">::__class() {");
+    p2.println(" static java::lang::Class k = "); 
+    p2.println(" new java::lang::__Class(literal(\"[L" + classopener +";\"),"); 
+    p2.println("                         java::lang::__Object::__class(),"); 
+    p2.println("                         " + "__" + classopener +"::__class());"); 
+    p2.println(" return k; "); 
+    p2.println(" }"); 
+    p2.println(" }"); 
+    p2.println(); 
+
+
+
+
+
+
+
+
 
 
   }
@@ -2021,11 +2818,56 @@ public class JavaPrinter extends Visitor {
   /** Visit the specified return statement. */
   public void visitReturnStatement(GNode n) {
 
-    
+    if(n.toString().contains("AdditiveExpression")) {
+
+        p2.println(" std::ostringstream sout;");
+
+        new Visitor() { 
+
+          public void visitAdditiveExpression(GNode n) { 
+
+              visit(n);
+
+
+          }
+          public void visitThisExpression (GNode n) { 
+
+            p2.println("sout << " + "__this->" + n.getString(0) + ";"); 
+            p2.println(" sout << \"     \" ;"); 
+          }
 
 
 
-    if ((n.toString()).contains("StringLiteral") && !(n.toString().contains("CallExpression"))){
+         public void visit(Node n) {
+                       for (Object o : n) if (o instanceof Node) dispatch((Node) o);
+         }
+
+
+
+        }.dispatch(n); 
+
+
+
+
+
+        p2.print("return new __String(sout.str()); ");
+
+
+
+    }  
+
+
+
+  else  if(n.toString().contains("NewClassExpression")) { 
+
+      p2.println("    return new __" + n.getNode(0).getNode(2).getString(0) + "();"); 
+
+
+    }
+
+
+
+   else if ((n.toString()).contains("StringLiteral") && !(n.toString().contains("CallExpression"))){
       
 
       p2.println("   std::ostringstream sout;");
@@ -2049,8 +2891,10 @@ public class JavaPrinter extends Visitor {
     }
 
     else if ( n.toString().contains("CallExpression")) { 
+                      p2.println("Class k = __this->__vptr->getClass(__this);"); 
+                      p2.println(" return k->__vptr->getName(k);");
 
-                    p2.println(" return " + "__this" + "-> " + "__vptr->" + n.getNode(0).getString(2) + "(" + "__this" + ")->data;");
+                   
     }
 
     else{ printer.p(n.toString()).pln().pln();

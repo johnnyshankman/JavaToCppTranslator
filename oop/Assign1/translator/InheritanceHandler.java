@@ -864,7 +864,7 @@ public class InheritanceHandler extends Visitor {
 			paramsNames[i] = thisTypeNode.getNode(0).getString(0);
 		}
 		for( String s : paramsNames ) {
-			name += "$" + s;
+			name += "_" + s;
 		}
 		return name;
 	}

@@ -1,11 +1,12 @@
 class A {
-  A self;
+  A self2;
   
   public A() {
-    self = this;
+    self2 = this;
   }
 
-  public A self() { return self; }
+  public A self() { return self2; }
+
 }
 
 public class Test17 {

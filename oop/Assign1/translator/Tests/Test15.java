@@ -1,12 +1,12 @@
 class A {
+  public A some;
+
   public void printOther(A other) {
     System.out.println(other.toString());
   }
 }
 
 class B extends A {
-  public B some;
-
   public void printOther(A other) {
     System.out.println(other.toString());
   }
@@ -14,20 +14,16 @@ class B extends A {
   public String toString() {
     return some.toString();
   }
-
-  
-
-
-
 }
 
-public class Test16 {
+public class Test15 {
   public static void main(String[] args) {
     A a = new A();
-    B other = new B();
-
     
-    other.some = (B) a; // throws ClassCastException
+    B other = new B();
+    other.some = a;
+
     a.printOther(other);
+    
   }
 }

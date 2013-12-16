@@ -1,13 +1,8 @@
+// Ankit goel's pretty printing
 #include "java_lang.h" 
 #include "Header.h" 
 #include <sstream> 
-namespace java {
-namespace lang {
-
-A __A::init_Construct(A __this ) {
-
-    return __this; 
- } 
+using namespace java::lang;
 
  Class __A::__class() { 
     static Class k  = 
@@ -15,9 +10,10 @@ A __A::init_Construct(A __this ) {
     return k; 
  }
 
-void  __A::printOther$A ( A  __this , A other  )  {
-   __rt::checkNotNull(other);
-    std::cout << other->__vptr->toString(other)->data << std::endl;
+String  __A::toString(A __this ) { 
+   std::ostringstream sout;
+   sout <<"A";
+   return new __String(sout.str());
 }
 
 
@@ -26,49 +22,61 @@ __A::__A() : __vptr(&__vtable) {
 
 __A_VT __A:: __vtable;
 
-B __B::init_Construct(B __this ) {
+A __A::init_Construct(A __this ) {
+
 
     return __this; 
  } 
 
- Class __B::__class() { 
-   static Class k  = 
-   new __Class(__rt::literal("java.lang.B") , __A::__class());
-   return k; 
-}
+ // Array Specialization for Java Classes 
 
-void  __B::printOther$A ( B  __this , A other  )  {
-   __rt::checkNotNull(other);
-    std::cout << other->__vptr->toString(other)->data << std::endl;
-}
-
-String  __B::toString(B __this ) { 
- return __this-> __vptr->toString(__this)->data;
-}
+ namespace __rt { 
+ template<>
+ java::lang::Class Array<A>::__class() {
+ static java::lang::Class k = 
+ new java::lang::__Class(literal("[LA;"),
+                         java::lang::__Object::__class(),
+                         __A::__class());
+ return k; 
+ }
+ }
 
 
-__B::__B() : __vptr(&__vtable) {
-}
-
-__B_VT __B:: __vtable;
-
-Test16 __Test16::init_Construct(Test16 __this ) {
-
-    return __this; 
- } 
-
- Class __Test16::__class() { 
+ Class __Test1::__class() { 
     static Class k  = 
-    new __Class(__rt::literal("java.lang.Test16") , __Object::__class());
+    new __Class(__rt::literal("java.lang.Test1") , __Object::__class());
     return k; 
  }
 
 
-
-__Test16::__Test16() : __vptr(&__vtable) {
+void __Test1::main(__rt::Ptr<__rt::Array<String> > args) { 
+    A  a = __A::init_Construct(  new __A());
+    std::cout << a->__vptr->toString(a) << std::endl; 
 }
 
-__Test16_VT __Test16:: __vtable;
 
+__Test1::__Test1() : __vptr(&__vtable) {
 }
-}
+
+__Test1_VT __Test1:: __vtable;
+
+Test1 __Test1::init_Construct(Test1 __this ) {
+
+
+    return __this; 
+ } 
+
+ // Array Specialization for Java Classes 
+
+ namespace __rt { 
+ template<>
+ java::lang::Class Array<Test1>::__class() {
+ static java::lang::Class k = 
+ new java::lang::__Class(literal("[LTest1;"),
+                         java::lang::__Object::__class(),
+                         __Test1::__class());
+ return k; 
+ }
+ }
+
+

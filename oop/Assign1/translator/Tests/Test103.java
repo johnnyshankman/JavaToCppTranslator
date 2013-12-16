@@ -4,8 +4,10 @@
 	
 }
  class B{
+ 	String b; 
 	B(){
-		System.out.println("In B");
+		b = "In B"; 
+		System.out.println(b);
 	}
 }
  

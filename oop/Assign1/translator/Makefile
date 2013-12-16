@@ -53,7 +53,6 @@ SOURCE = \
        CPPrinter.java \
        CreateCplusplusHeader.java \
        SymbolTableHandler.java \
-       CreateMethodBodies.java  \
        JavaPrinter.java
 
 JNI_SOURCE =

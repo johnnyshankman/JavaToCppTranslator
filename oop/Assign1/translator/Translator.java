@@ -32,6 +32,10 @@ import java.io.*;
  */
 public class Translator extends xtc.util.Tool {
 
+  /** global debug value, initialized to no debugging */
+  public static boolean DEBUG = false;
+    
+    
   /** Create a new translator. */
   public Translator() {
     // Nothing to do.
@@ -54,6 +58,7 @@ public class Translator extends xtc.util.Tool {
       bool("printJavaCode", "printJavaCode", false, "Print Java code.").
       bool("countMethods", "countMethods", false, "Count all Java methods.").
       bool("translate", "translate", false, "Translate from Java to C++.").
+      bool("debug", "debug", false, "Extra debug printout parameter.").
       bool("findDependencies", "findDependencies", false, "Find all Dependencies of given Java file.");
   }
 
@@ -89,6 +94,12 @@ public class Translator extends xtc.util.Tool {
     if (runtime.test("printJavaAST")) {
       runtime.console().format(node).pln().flush();
     }
+    
+      
+    if (runtime.test("debug")) {
+        DEBUG = true;
+    }
+      
 
     if (runtime.test("printJavaCode")) {
       new CPrinter(runtime.console()).dispatch(node);
@@ -126,8 +137,8 @@ public class Translator extends xtc.util.Tool {
       
  
     if (runtime.test("translate")){
-        runtime.console().pln("Begin translation...\n").flush();
         
+        runtime.console().pln("Begin translation...\n").flush();
         
         /*
          * This finds and resolves all dependencies within the java file
@@ -171,8 +182,11 @@ public class Translator extends xtc.util.Tool {
         new JavaAstSimplifier().dispatch((GNode)node);
         final SymbolTable table = new SymbolTable(); //empty symbol table
         new SymbolTableHandler(runtime, table).dispatch((GNode)node); //create the table
-        table.current().dump( runtime.console() ); //print dump the table into console
-        runtime.console().pln().pln().pln().flush();
+        if(DEBUG){
+            runtime.console().pln("DEBUG: Printing symbol table...\n").flush();
+            table.current().dump( runtime.console() ); //print dump the table into console
+        }
+        runtime.console().pln().pln().flush();
          
         
         
@@ -185,7 +199,10 @@ public class Translator extends xtc.util.Tool {
          */
         runtime.console().pln("Building vtables and data-layouts for C++ ASTs...\n").flush();
         InheritanceHandler layout = new InheritanceHandler(unsimplified, runtime.console());
-        runtime.console().format(layout.getClassTree()).pln().pln().pln().pln().flush();
+        if(DEBUG){
+            runtime.console().pln("DEBUG: Printing out ASTs for all class Data Layouts and Virtual Tables...\n").flush();
+            runtime.console().format(layout.getClassTree()).pln().pln().pln().flush();
+        }
         
         
         
@@ -208,7 +225,7 @@ public class Translator extends xtc.util.Tool {
          * This translates the simplified java AST into C++
          * The output of this will be printed in to the class.cc file!
          */
-      //  runtime.console().pln("Translating body...\n").pln().pln().pln().flush();  
+        runtime.console().pln("Translating body...\n").pln().pln().pln().flush();
         GNode [] ccAstArray = new GNode [50];        
         for(int i=0 ; i<astArray.length ; i++)
         {
@@ -217,7 +234,10 @@ public class Translator extends xtc.util.Tool {
         		ASTConverter ccConverter = new ASTConverter(astArray[i], layout, table, runtime.console() );
         		ccConverter.createCCTree();
         		ccAstArray[i] = ccConverter.getCCTree();
-        		//runtime.console().format(ccAstArray[i]).pln().flush();
+        		if(DEBUG){
+                    runtime.console().pln("DEBUG: Printing out hybrid Java/C++ AST...\n").flush();
+                    runtime.console().format(ccAstArray[i]).pln().flush();
+                }
         	}
         }
         
@@ -227,8 +247,11 @@ public class Translator extends xtc.util.Tool {
          * Final step woohoo!
          */
         runtime.console().pln("Siphoning output to .cc files...").pln().pln().pln().flush();
-       runtime.console().format(node).pln().pln().pln().flush();
-        new JavaPrinter(runtime.console()).dispatch(node);  
+        if(DEBUG) {
+            runtime.console().pln("DEBUG: Printing out method body AST..").flush();
+            runtime.console().format(node).pln().pln().pln().flush();
+        }
+        new JavaPrinter(runtime.console()).dispatch(node);
         runtime.console().flush();
      
         

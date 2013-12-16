@@ -67,14 +67,13 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             // p1.println(countClasses);
             //  p1.println(countChildren);
             
-            
+            p1.println("// Ankit Goel's Header"); 
             p1.println("#pragma once");
             p1.println();
             p1.println("#include <stdint.h>");
             p1.println("#include <string>"); 
             p1.println(); 
-            p1.println("namespace java {"); 
-            p1.println("namespace lang {");
+            p1.println("using namespace java::lang;");
             p1.println("// Foward Declarations "); 
             p1.println();
                         
@@ -392,7 +391,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                 
                     
-                    if( !(n.getNode(1).getString(1).equals("__Object")) && !(n.getString(0).equals("main$String")) ) { 
+                    if( !(n.getNode(1).getString(1).equals("__Object")) && !(n.getString(0).equals("main_String")) ) { 
                         
                      
                        
@@ -475,7 +474,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             // Remove anything after _ in the method these are the parameters that are appended to it 
             for ( int i = 0; i < names.size(); i++ ) { 
                 
-                Pattern p = Pattern.compile("\\$");    
+                Pattern p = Pattern.compile("_");    
                 
                 Matcher m = p.matcher(names.get(i)); 
                 
@@ -529,7 +528,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
 
                         p1.print("    "  + "static " + types2.get(i) + " " + specialnames.get(i) + "( " + plainClassName + " , " ); 
                     
-                        Pattern pp = Pattern.compile("\\$");    
+                        Pattern pp = Pattern.compile("_");    
                     
                         Matcher mm = pp.matcher(parameters.get(specialnames.get(i))); 
                     
@@ -569,6 +568,13 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println("    static Class __class(); "); 
             p1.println("    static void init(  " + "__" + plainClassName+ "*" + "  );"); 
             p1.println();
+
+              // Changes for Command line arguements
+              if ( plainClassName.contains("Test")) { 
+
+                p1.println("    static void main(__rt::Ptr<__rt::Array<String> > args);"); 
+
+              }
             p1.println("    static __" + plainClassName + "_" + "VT " + "__vtable;"); 
             p1.println();
             p1.println(" };"); 
@@ -616,7 +622,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                     
                         if ( !(specialnames.get(i).equals(plainClassName)) ) {    
                         
-                            Pattern pp = Pattern.compile("\\$");    
+                            Pattern pp = Pattern.compile("_");    
                     
                             Matcher mm = pp.matcher(parameters.get(specialnames.get(i))); 
                     
@@ -656,7 +662,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
             p1.println(); 
             // Now the constructor initilization inlined in the header 
             p1.println("    __" + plainClassName + "_VT()");
-            p1.println("    : __isa(__" + "Object" + "::__class()),");
+            p1.println("    : __isa(__" + plainClassName + "::__class()),");
             
             List<String> getImplementation = new ArrayList<String>();
                
@@ -801,7 +807,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                             
                             p1.print("      "   + specialnames.get(i) + "((" + types2.get(i) + "(*)" + "(" + plainClassName + " , ");
                             
-                            Pattern pp = Pattern.compile("\\$");    
+                            Pattern pp = Pattern.compile("_");    
                             
                             Matcher mm = pp.matcher(parameters.get(specialnames.get(i))); 
                             
@@ -859,8 +865,7 @@ public class CreateCplusplusHeader extends xtc.util.Tool {
                 //p1.println(names);
             
            
-            p1.println("}");
-            p1.println("}");
+           
             p1.flush();
             p1.close();
         } 

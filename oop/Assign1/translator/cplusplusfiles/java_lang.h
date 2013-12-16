@@ -295,6 +295,8 @@ namespace __rt {
   struct Array {
     Array_VT<T>* __vptr;
     const int32_t length;
+
+    // The Type of hte array 
     T* __data;
 
     // The constructor (defined inline).
@@ -405,6 +407,7 @@ namespace __rt {
     
     if (! c->__vptr->isInstance(c, object)) {
       throw java::lang::ClassCastException();
+      std::cout<<"Class Cast Expception" << std::endl; 
     }
 
     return T(object);

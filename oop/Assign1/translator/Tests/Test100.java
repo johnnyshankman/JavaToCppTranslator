@@ -20,6 +20,6 @@ public class Test100{
       NewYorkUniversity nyuCs = new Courant();
 
       nyu.classes();
-      nyuCs.classes();
+     nyuCs.classes();
    }
 }
